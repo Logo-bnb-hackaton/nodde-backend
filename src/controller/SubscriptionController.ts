@@ -1,35 +1,21 @@
+import { NextFunction, Request, Response } from "express"
 
-class SubscriptionDescriptionRequest {
-    constructor(readonly address: string, contentId: string) {}
-}
-
-class SubscriptionDescriptionResponse {
-
-}
-
-class SubscriptionUpdateRequest {
-
-}
-
-class SubscriptionUpdateResponse {
-
-}
 
 export interface SubscriptionController {
 
-    getSubscriptionDescription(request: SubscriptionDescriptionRequest): Promise<SubscriptionDescriptionResponse>
+    getSubscriptionDescription(req: Request, res: Response, next: NextFunction): void
 
-    update(request: SubscriptionUpdateRequest): Promise<SubscriptionUpdateResponse>
+    update(req: Request, res: Response, next: NextFunction): void
 
 }
 
 export class SubscriptionControllerImpl implements SubscriptionController {
 
-    getSubscriptionDescription(request: SubscriptionDescriptionRequest): Promise<SubscriptionDescriptionResponse> {
+    getSubscriptionDescription(req: Request, res: Response, next: NextFunction): void {
         throw new Error("Method not implemented.")
     }
 
-    update(request: SubscriptionUpdateRequest): Promise<SubscriptionUpdateResponse> {
+    update(req: Request, res: Response, next: NextFunction): void {
         throw new Error("Method not implemented.")
     }
     
