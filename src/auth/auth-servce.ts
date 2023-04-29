@@ -1,5 +1,5 @@
 import { Request } from "express"
-import { AuthNonce, AuthRepository } from "./auth-repository"
+import { AuthNonce, AuthRepository, authRepository } from "./auth-repository"
 import { Success, timestampSeconds } from "../common"
 import { ethers } from "ethers"
 
@@ -90,3 +90,7 @@ export class AuthServiceImpl implements AuthService {
         return false
     }
 }
+
+
+const authService: AuthService = new AuthServiceImpl(authRepository)
+export { authService }

@@ -27,3 +27,5 @@ export class AuthRepositoryImpl implements AuthRepository {
 
 }
 
+const authRepository: AuthRepository = new AuthRepositoryImpl()
+export { authRepository }

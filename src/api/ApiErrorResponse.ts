@@ -6,6 +6,6 @@ export class ApiErrorResponse {
     }
 }
 
-class Error {
+export class Error {
     constructor(readonly code: string, readonly message: string) {}
 }
