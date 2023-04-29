@@ -1,4 +1,4 @@
-import { DbResult } from "../db/wrappers"
+import { DbResult } from "../db/db"
 
 export class AuthNonce {
     constructor(

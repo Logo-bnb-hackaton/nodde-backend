@@ -5,6 +5,7 @@ import { profileController } from './src/controller/ProfileController';
 import { subscriptionController } from './src/controller/SubscriptionController';
 import dotenv from 'dotenv';
 import { authRepository } from './src/auth/auth-repository';
+import serverless from 'serverless-http';
 
 dotenv.config();
 
@@ -32,3 +33,6 @@ app.post('/subscription/', [authMiddleware.authorizeWallet])
 app.listen(port, () => {
     console.log(`Server has been started on port ${port}`);
 })
+
+const server = serverless(app)
+export { server }
