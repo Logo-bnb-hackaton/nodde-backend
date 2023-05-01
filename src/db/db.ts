@@ -1,6 +1,6 @@
 import { dynamo } from "./dynamo";
 import { Error, Success } from "../common";
-import { GetItemCommand, ScanCommand, ScanCommandOutput } from "@aws-sdk/client-dynamodb";
+import { GetItemCommand, QueryCommand, QueryCommandInput, ScanCommand, ScanCommandOutput } from "@aws-sdk/client-dynamodb";
 import { GetItemCommandInput } from "@aws-sdk/client-dynamodb";
 import { PutItemCommandInput } from "@aws-sdk/client-dynamodb";
 import { PutItemCommand } from "@aws-sdk/client-dynamodb";
@@ -26,6 +26,16 @@ export const get = async (params: GetItemCommandInput): Promise<DbResult<any>> =
     }
 }
 
+export const query = async (params: QueryCommandInput): Promise<DbResult<any>> => {
+    try {
+        const result = await dynamo.send(new QueryCommand(params))
+        return new DbResult(Success, result.Items)
+    } catch (error) {
+        console.error(`Error when get params: ${params}`, error);
+        return new DbResult(Error, undefined)
+    }
+}
+
 export const put = async (params: PutItemCommandInput): Promise<DbResult<any>> => {
     try {
         await dynamo.send(new PutItemCommand(params))
@@ -40,8 +50,8 @@ export const loadBySId = async (tableName: string, id: string): Promise<DbResult
     return await get({
         TableName: tableName,
         Key: {
-            "id": {
-                "S": id
+            id: {
+                S: id
             }
         }
     })

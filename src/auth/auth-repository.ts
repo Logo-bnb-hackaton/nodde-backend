@@ -1,4 +1,5 @@
-import { DbResult, get, put } from "../db/db"
+import { Success } from "@/common"
+import { DbResult, put, query } from "../db/db"
 
 export class AuthNonce {
     constructor(
@@ -23,29 +24,36 @@ export class AuthRepositoryImpl implements AuthRepository {
             TableName: this.tableName,
             Item: {
                 address: {
-                    "S": authNonde.address
+                    S: authNonde.address
                 },
                 nonce: {
-                    "S": authNonde.nonce
+                    S: authNonde.nonce
                 },
                 createdAt: {
-                    "N": authNonde.createdAt.toString()
+                    N: authNonde.createdAt.toString()
                 },
                 expiredIn: {
-                    "N": authNonde.expiredIn.toString()
+                    N: authNonde.expiredIn.toString()
                 }
             }
         })
     }
     async getAuthNonceByAddress(address: string): Promise<DbResult<AuthNonce | undefined>> {
-        return get({
+        const result = await query({
             TableName: this.tableName,
-            Key: {
-                address: {
-                    "S": address
-                }
-            }
+            KeyConditionExpression: "address = :address",
+            ExpressionAttributeValues: {
+                ":address": { S: address },
+            },
+            ScanIndexForward: false,
+            Limit: 1,
         })
+
+        if (result.status === Success && (result.item as Array<any>).length == 1) {
+            return new DbResult(Success, result.item[0])
+        }
+
+        return result
     }
 
 }

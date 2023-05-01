@@ -45,22 +45,22 @@ export class ProfileControllerImpl implements ProfileController {
                 TableName: ProfileTableName,
                 Item: {
                     id: {
-                        "N": profile.id,
+                        N: profile.id,
                     },
                     title: {
-                        "S": profile.title
+                        S: profile.title
                     },
                     description: {
-                        "S": profile.description
+                        S: profile.description
                     },
                     logoId: {
-                        "S": profile.logoId
+                        S: profile.logoId != undefined ? profile.logoId : ""
                     },
                     socialMediaLinks: {
-                        "L": profile.socialMediaLinks
+                        L: profile.socialMediaLinks
                     },
                     instant: {
-                        "N": profile.instant
+                        N: profile.instant
                     }
                 }
             })

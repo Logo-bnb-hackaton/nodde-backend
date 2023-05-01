@@ -91,34 +91,34 @@ export class SubscriptionControllerImpl implements SubscriptionController {
                 TableName: SubscriptionTableName,
                 Item: {
                     id: {
-                        "S": subscription.id
+                        S: subscription.id
                     },
                     ownerId: {
-                        "S": subscription.ownerId
+                        S: subscription.ownerId
                     },
                     status: {
-                        "S": subscription.status
+                        S: subscription.status
                     },
                     title: {
-                        "S": subscription.title
+                        S: subscription.title
                     },
                     description: {
-                        "S": subscription.description
+                        S: subscription.description
                     },
                     mainImageId: {
-                        "S": subscription.mainImageId
+                        S: subscription.mainImageId != undefined ? subscription.mainImageId : ""
                     },
                     previewImageId: {
-                        "S": subscription.previewImageId
+                        S: subscription.previewImageId != undefined ? subscription.previewImageId : ""
                     }, 
                     price: {
-                        "N": subscription.price
+                        N: subscription.price
                     },
                     coin: {
-                        "S": subscription.coin
+                        S: subscription.coin
                     },
                     instant: {
-                        "N": subscription.instant
+                        N: subscription.instant
                     }
                 },
             })
