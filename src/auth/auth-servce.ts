@@ -26,6 +26,8 @@ export class AuthServiceImpl implements AuthService {
     }
 
     async createNewNonce(address: string): Promise<AuthNonce> {
+
+        console.log(`Start creating new nonce for address ${address}`)
         
         let nonce = await this.generateNewNonce(10)
         let newAuthNonce = new AuthNonce(

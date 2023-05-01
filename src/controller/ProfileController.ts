@@ -18,8 +18,8 @@ export class ProfileControllerImpl implements ProfileController {
     ) { }
 
     async update(req: Request, res: Response, next: NextFunction): Promise<void> {
-        const newProfileData = req.body;
-        const profileId = req.body.id;
+        const newProfileData = JSON.parse(Buffer.from(req.body).toString())
+        const profileId = newProfileData.id
         if (!profileId) {
             console.log("profileId is null");
             res.send(toErrorResponse("profileId is null"));
@@ -77,7 +77,8 @@ export class ProfileControllerImpl implements ProfileController {
 
     async profile(req: Request, res: Response, next: NextFunction): Promise<void> {
 
-        const profileId = req.body[0].profileId;
+        const body = JSON.parse(Buffer.from(req.body).toString())
+        const profileId = body.profileId;
 
         if (!profileId) {
             console.log('Error, profileId is null.');
@@ -104,7 +105,7 @@ export class ProfileControllerImpl implements ProfileController {
                 profile.logoId = undefined
             });
 
-        const subscriptionsPromise = await this.subscriptionService.loadBriefSubscription(profileId).then(s => profile.subscriptions = s);
+        const subscriptionsPromise = await subscriptionService.loadBriefSubscription(profileId).then(s => profile.subscriptions = s);
 
         await Promise.all([logoPromise, subscriptionsPromise])
 

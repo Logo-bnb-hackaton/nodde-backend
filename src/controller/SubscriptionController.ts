@@ -17,8 +17,9 @@ export class SubscriptionControllerImpl implements SubscriptionController {
 
     async getSubscriptionDescription(req: Request, res: Response, next: NextFunction): Promise<void> {
 
+        const body = JSON.parse(Buffer.from(req.body).toString())
 
-        const subId = req.body.subscriptionId;
+        const subId = body.subscriptionId;
         if (!subId) {
             console.log(`Error, subId is null: ${subId}`);
             res.send(toErrorResponse(`Error, subId is null: ${subId}`));
@@ -56,8 +57,8 @@ export class SubscriptionControllerImpl implements SubscriptionController {
 
     async update(req: Request, res: Response, next: NextFunction): Promise<void> {
 
-        const newSubData = req.body;
-        const subId = req.body.id;
+        const newSubData = JSON.parse(Buffer.from(req.body).toString());
+        const subId = newSubData.id;
         if (!subId) {
             console.log("subId is null");
             res.send({

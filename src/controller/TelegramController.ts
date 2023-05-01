@@ -13,8 +13,9 @@ export class TelegramControllerImpl implements TelegramController {
 
     async getInviteLink(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
+            const body = JSON.parse(Buffer.from(req.body).toString())
             const address = req.headers[X_API_WALLET_ADDRESS_HEADER]
-            const { content_id } = req.body
+            const { content_id } = body
             const invocationResult = await invokeLambda("getInviteCode", {
                 address: address,
                 content_id: content_id
@@ -41,8 +42,9 @@ export class TelegramControllerImpl implements TelegramController {
 
     async generateInviteLink(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
+            const body = JSON.parse(Buffer.from(req.body).toString())
             const address = req.headers[X_API_WALLET_ADDRESS_HEADER]
-            const { content_id, author } = req.body
+            const { content_id, author } = body
             const invocationResult = await invokeLambda("prepareInvite", {
                 address: address,
                 content_id: content_id,
@@ -71,8 +73,9 @@ export class TelegramControllerImpl implements TelegramController {
 
     async bindChat(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
+            const body = JSON.parse(Buffer.from(req.body).toString())
             const address = req.headers[X_API_WALLET_ADDRESS_HEADER]
-            const { code, content_id } = req.body
+            const { code, content_id } = body
             const invocationResult = await invokeLambda("bindChat", {
                 address: address,
                 code: code,

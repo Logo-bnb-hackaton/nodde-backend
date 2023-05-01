@@ -8,12 +8,13 @@ export interface AuthController {
 
 export class AuthControllerImpl implements AuthController {
 
-    constructor(readonly authService: AuthService) { }
+    constructor(readonly authService: AuthService) {}
 
     async authenticate(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            let { address } = req.body
-            let authNonce = await this.authService.createNewNonce(address)
+            let { address } = JSON.parse(Buffer.from(req.body).toString())
+            console.log(`Start handle auth request for address ${address}`)
+            let authNonce = await authService.createNewNonce(address)
             res
                 .send({
                     nonce: authNonce.nonce,
