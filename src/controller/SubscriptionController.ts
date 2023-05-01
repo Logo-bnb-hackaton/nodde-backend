@@ -1,7 +1,8 @@
 import { NextFunction, Request, Response } from "express"
-import { ProfileTableName, SubscriptionTableName, toErrorResponse, toSuccessResponse } from "../common";
+import { ProfileTableName, toErrorResponse, toSuccessResponse } from "../common";
 import { getObjById, s3DataToBase64String, updateImage } from "../s3/image";
 import { loadByNId, put } from "../db/db";
+import { SubscriptionTableName } from "@/subscription/subscription-repository";
 
 
 export interface SubscriptionController {
@@ -131,7 +132,7 @@ export class SubscriptionControllerImpl implements SubscriptionController {
                 errorMessage: errorMessage
             });
         } finally {
-            console.log("Subscription was updated.");
+            console.log("Subscription was updated."); 
         }
 
         next()

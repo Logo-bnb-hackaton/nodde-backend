@@ -24,7 +24,12 @@ export async function getObjById(bucket: string, id: string): Promise<any> {
 export async function saveNewImage(bucket: string, base64Image: string) {
     console.log(`saveNewImage`)
     const data = await base64StringToBuffer(base64Image)
-    const type = base64Image.split(";")[0].split("/")[1]
+    const firstSplit = base64Image.split(";")[0]
+    if (firstSplit === undefined) {
+        console.error("ERROR WHEN SPLITTING BASE 64 IMAGE " + base64Image)
+        return
+    }
+    const type = firstSplit.split("/")[1]
     const key = randomUUID()
     const input = {
         Bucket: bucket,

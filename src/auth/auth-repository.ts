@@ -1,4 +1,4 @@
-import { DbResult } from "../db/db"
+import { DbResult, get, put } from "../db/db"
 
 export class AuthNonce {
     constructor(
@@ -19,10 +19,33 @@ export class AuthRepositoryImpl implements AuthRepository {
     private tableName: string = "auth-nonce"
 
     async saveAuthNonce(authNonde: AuthNonce): Promise<DbResult<AuthNonce>> {
-        throw new Error("Method not implemented.")
+        return put({
+            TableName: this.tableName,
+            Item: {
+                address: {
+                    "S": authNonde.address
+                },
+                nonce: {
+                    "S": authNonde.nonce
+                },
+                createdAt: {
+                    "N": authNonde.createdAt.toString()
+                },
+                expiredIn: {
+                    "N": authNonde.expiredIn.toString()
+                }
+            }
+        })
     }
     async getAuthNonceByAddress(address: string): Promise<DbResult<AuthNonce | undefined>> {
-        throw new Error("Method not implemented.")
+        return get({
+            TableName: this.tableName,
+            Key: {
+                address: {
+                    "S": address
+                }
+            }
+        })
     }
 
 }

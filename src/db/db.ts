@@ -1,6 +1,6 @@
 import { dynamo } from "./dynamo";
 import { Error, Success } from "../common";
-import { GetItemCommand, QueryCommand, ScanCommand, ScanCommandOutput } from "@aws-sdk/client-dynamodb";
+import { GetItemCommand, ScanCommand, ScanCommandOutput } from "@aws-sdk/client-dynamodb";
 import { GetItemCommandInput } from "@aws-sdk/client-dynamodb";
 import { PutItemCommandInput } from "@aws-sdk/client-dynamodb";
 import { PutItemCommand } from "@aws-sdk/client-dynamodb";

@@ -6,8 +6,6 @@ export const AWS_REGION = "us-east-1"
 
 export const ProfileImageBucket = "community-profile-images-1r34goy";
 export const ProfileTableName = "Community-profile";
-export const SubscriptionImageBucket = "community-subscription-images-321t9587g";
-export const SubscriptionTableName = "Community-subscription";
 
 export function timestampSeconds(): number {
     return Date.now() / 1000

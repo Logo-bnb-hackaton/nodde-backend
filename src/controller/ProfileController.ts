@@ -106,6 +106,10 @@ export class ProfileControllerImpl implements ProfileController {
 
         const subscriptionsPromise = await this.subscriptionService.loadBriefSubscription(profileId).then(s => profile.subscriptions = s);
 
+        await Promise.all([logoPromise, subscriptionsPromise])
+
+        res.send(toSuccessResponse(profile))
+
         next()
     }
 }
