@@ -10,8 +10,8 @@ export interface AuthService {
     createNewNonce(address: string): Promise<AuthNonce>
 }
 
-const X_API_WALLET_ADDRESS_HEADER = "x-api-wallet-address"
-const X_API_SIGNATURE_HEADER = "x-api-signature"
+export const X_API_WALLET_ADDRESS_HEADER = "x-api-wallet-address"
+export const X_API_SIGNATURE_HEADER = "x-api-signature"
 
 export class AuthServiceImpl implements AuthService {
 

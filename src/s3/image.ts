@@ -29,7 +29,7 @@ export async function saveNewImage(bucket: string, base64Image: string) {
     const input = {
         Bucket: bucket,
         Key: key,
-        Body: base64Image,
+        Body: data,
         ContentEncoding: "base64",
         ContentType: `image/${type}`
     }

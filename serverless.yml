@@ -1,0 +1,19 @@
+service: nodde-backend
+
+provider:
+  name: aws
+  runtime: nodejs14.x
+  stage: dev
+  region: us-east-1
+  logs:
+    httpApi: true
+  httpApi:
+    cors: true  
+
+functions:
+  app:
+    handler: src/handler.handler
+    events:
+      - httpApi:
+          path: "/{proxy+}"
+          method: "*" 

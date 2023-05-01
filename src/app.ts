@@ -1,11 +1,10 @@
 import express, { Express, Request, Response } from 'express';
-import { authMiddleware } from './src/auth/auth-middleware';
-import { authController } from './src/controller/AuthController';
-import { profileController } from './src/controller/ProfileController';
-import { subscriptionController } from './src/controller/SubscriptionController';
+import { authMiddleware } from './auth/auth-middleware';
+import { authController } from './controller/AuthController';
+import { profileController } from './controller/ProfileController';
+import { subscriptionController } from './controller/SubscriptionController';
 import dotenv from 'dotenv';
-import serverless from 'serverless-http';
-import { telegramController } from './src/controller/TelegramController';
+import { telegramController } from './controller/TelegramController';
 
 dotenv.config();
 
@@ -38,5 +37,4 @@ app.listen(port, () => {
     console.log(`Server has been started on port ${port}`);
 })
 
-const server = serverless(app)
-export { server }
+export { app }
