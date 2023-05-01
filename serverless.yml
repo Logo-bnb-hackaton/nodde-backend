@@ -1,10 +1,22 @@
 service: nodde-backend
 
+custom:
+  stage: ${opt:stage, 'offline'}
+  region: ${opt:region, 'us-east-1'}
+  esbuild:
+    platform: "node"
+    target: node16
+    sourcemap: linked
+  serverless-offline:
+    httpPort: 4000
+    noPrependStageInUrl: true
+    reloadHandler: true
+
 provider:
   name: aws
-  runtime: nodejs14.x
-  stage: dev
-  region: us-east-1
+  runtime: nodejs16.x
+  stage: ${self:custom.stage}
+  region: ${self:custom.region}
   logs:
     httpApi: true
   httpApi:
@@ -57,6 +69,12 @@ functions:
   app:
     handler: src/handler.handler
     events:
-      - httpApi:
-          path: "/{proxy+}"
-          method: "*" 
+      - http:
+          path: /{proxy+}
+          method: ANY
+          cors: true
+
+plugins:
+  - serverless-dotenv-plugin
+  - serverless-esbuild
+  - serverless-offline          

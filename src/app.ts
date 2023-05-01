@@ -1,4 +1,4 @@
-import express, { Express, Request, Response } from 'express';
+import express, { Express, Request, Response, json } from 'express';
 import { authMiddleware } from './auth/auth-middleware';
 import { authController } from './controller/AuthController';
 import { profileController } from './controller/ProfileController';
@@ -9,7 +9,7 @@ import { telegramController } from './controller/TelegramController';
 dotenv.config();
 
 const app: Express = express();
-const port = process.env.PORT;
+app.use(json());
 
 app.get('/', (_: Request, res: Response) => {
     res.send({
