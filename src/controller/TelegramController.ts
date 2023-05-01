@@ -1,6 +1,6 @@
 import { X_API_WALLET_ADDRESS_HEADER } from "@/auth/auth-servce";
 import { toErrorResponse, toSuccessResponse } from "@/common";
-import { invokeLambda } from "@/lambda/wrap";
+import { getJsonFromLambdaResponse, invokeLambda } from "@/lambda/wrap";
 import { NextFunction, Request, Response } from "express";
 
 export interface TelegramController {
@@ -21,10 +21,10 @@ export class TelegramControllerImpl implements TelegramController {
             })
             if (200 === invocationResult.StatusCode) {
                 res
-                    .send(toSuccessResponse(invocationResult.Payload))
+                    .send(toSuccessResponse(getJsonFromLambdaResponse(invocationResult)))
                     .status(200)
             } else if (invocationResult.StatusCode?.toString().startsWith("4")) {
-                console.log(`Payload ${invocationResult.Payload}`)
+                console.log(`Payload ${getJsonFromLambdaResponse(invocationResult)}`)
                 res
                     .send(toErrorResponse("Bad request"))
                     .status(invocationResult.StatusCode!)
@@ -41,12 +41,16 @@ export class TelegramControllerImpl implements TelegramController {
 
     async generateInviteLink(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
+            const address = req.headers[X_API_WALLET_ADDRESS_HEADER]
+            const { content_id, author } = req.body
             const invocationResult = await invokeLambda("prepareInvite", {
-
+                address: address,
+                content_id: content_id,
+                author: author
             })
             if (200 === invocationResult.StatusCode) {
                 res
-                    .send(toSuccessResponse(invocationResult.Payload))
+                    .send(toSuccessResponse(getJsonFromLambdaResponse(invocationResult)))
                     .status(200)
             } else if (invocationResult.StatusCode?.toString().startsWith("4")) {
                 console.log(`Payload ${invocationResult.Payload}`)
@@ -76,10 +80,10 @@ export class TelegramControllerImpl implements TelegramController {
             })
             if (200 === invocationResult.StatusCode) {
                 res
-                    .send(toSuccessResponse(invocationResult.Payload))
+                    .send(toSuccessResponse(getJsonFromLambdaResponse(invocationResult)))
                     .status(200)
             } else if (invocationResult.StatusCode?.toString().startsWith("4")) {
-                console.log(`Payload ${invocationResult.Payload}`)
+                console.log(`Payload ${getJsonFromLambdaResponse(invocationResult)}`)
                 res
                     .send(toErrorResponse("Bad request"))
                     .status(invocationResult.StatusCode!)

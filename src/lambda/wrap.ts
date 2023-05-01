@@ -14,3 +14,7 @@ export const invokeLambda = async (name: string, body: any): Promise<InvokeComma
 
     return lambda.send(command)
 }
+
+export function getJsonFromLambdaResponse(output: InvokeCommandOutput): any {
+    return JSON.parse(Buffer.from(output.Payload!).toString())
+}
