@@ -33,8 +33,8 @@ app.post('/telegram/generate-invite-link', authMiddleware.authorizeWallet, teleg
 
 app.post('/telegram/bind-chat', authMiddleware.authorizeWallet, telegramController.bindChat)
 
-app.listen(port, () => {
-    console.log(`Server has been started on port ${port}`);
-})
+app.use((_, res, _2) => {
+    res.status(404).json({ error: 'NOT FOUND' });
+});
 
 export { app }
