@@ -1,11 +1,9 @@
 import { dynamo } from "./dynamo";
 import { Error, Success } from "../common";
-import { GetItemCommand } from "@aws-sdk/client-dynamodb";
+import { GetItemCommand, QueryCommand, ScanCommand, ScanCommandOutput } from "@aws-sdk/client-dynamodb";
 import { GetItemCommandInput } from "@aws-sdk/client-dynamodb";
 import { PutItemCommandInput } from "@aws-sdk/client-dynamodb";
 import { PutItemCommand } from "@aws-sdk/client-dynamodb";
-import { table } from "console";
-import { id } from "ethers";
 
 export class DbResult<Type> {
 
@@ -18,7 +16,7 @@ export class DbResult<Type> {
     }
 }
 
-export const get = async (params: GetItemCommandInput): Promise<DbResult<any>> {
+export const get = async (params: GetItemCommandInput): Promise<DbResult<any>> => {
     try {
         const result = await dynamo.send(new GetItemCommand(params))
         return new DbResult(Success, result.Item)
@@ -38,7 +36,7 @@ export const put = async (params: PutItemCommandInput): Promise<DbResult<any>> =
     }
 }
 
-export const loadBySId = async (tableName: string, id: string): Promise<DbResult<any>> {
+export const loadBySId = async (tableName: string, id: string): Promise<DbResult<any>> => {
     return await get({
         TableName: tableName,
         Key: {
@@ -49,7 +47,7 @@ export const loadBySId = async (tableName: string, id: string): Promise<DbResult
     })
 }
 
-export const loadByNId =async (tableName: string, id: Number): Promise<DbResult<any>> {
+export const loadByNId = async (tableName: string, id: Number): Promise<DbResult<any>> => {
     return await get(
         {
             TableName: tableName,
@@ -60,4 +58,25 @@ export const loadByNId =async (tableName: string, id: Number): Promise<DbResult<
             }
         }
     )
+}
+
+export const scanTable = async (tableName: string): Promise<any[]> => {
+
+    let input: any = {
+        TableName: tableName
+    }
+
+    const scanResults: any[] = []
+    let items: ScanCommandOutput
+
+    do {
+        items = await dynamo.send(new ScanCommand(input))
+        items.Items?.forEach((item) => scanResults.push(item))
+        input = {
+            TableName: tableName,
+            ExclusiveStartKey: items.LastEvaluatedKey
+        }
+    } while (typeof items.LastEvaluatedKey !== "undefined")
+
+    return scanResults
 }

@@ -18,6 +18,8 @@ export class AuthControllerImpl implements AuthController {
                 expired_id: authNonce.expiredIn
             })
             .status(200)
+        
+        next()
     }
 }
 

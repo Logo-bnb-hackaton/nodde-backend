@@ -1,13 +1,11 @@
 import express, { Express, Request, Response } from 'express';
 import { authMiddleware } from './src/auth/auth-middleware';
-import { AuthenticationRequest, authController } from './src/controller/AuthController';
+import { authController } from './src/controller/AuthController';
 import { profileController } from './src/controller/ProfileController';
 import { subscriptionController } from './src/controller/SubscriptionController';
 import dotenv from 'dotenv';
-import { authRepository } from './src/auth/auth-repository';
 import serverless from 'serverless-http';
-import { ApiErrorResponse } from './src/api/ApiErrorResponse';
-import { ApiResponse } from './src/api/ApiResponse';
+import { telegramController } from './src/controller/TelegramController';
 
 dotenv.config();
 
@@ -24,11 +22,17 @@ app.post('/auth', authController.authenticate)
 
 app.post('/profile/update', authMiddleware.authorizeWallet, profileController.update)
 
-app.post('/profile/', authMiddleware.authorizeWallet, profileController.profile)
+app.get('/profile/', authMiddleware.authorizeWallet, profileController.profile)
 
-app.post('/subscription/update', [authMiddleware.authorizeWallet])
+app.post('/subscription/update', authMiddleware.authorizeWallet, subscriptionController.update)
 
-app.post('/subscription/', [authMiddleware.authorizeWallet])
+app.get('/subscription/', authMiddleware.authorizeWallet, subscriptionController.getSubscriptionDescription)
+
+app.get('/telegram/get-invite-link', authMiddleware.authorizeWallet, telegramController.getInviteLink)
+
+app.post('/telegram/generate-invite-link', authMiddleware.authorizeWallet, telegramController.generateInviteLink)
+
+app.post('/telegram/bind-chat', authMiddleware.authorizeWallet, telegramController.bindChat)
 
 app.listen(port, () => {
     console.log(`Server has been started on port ${port}`);
