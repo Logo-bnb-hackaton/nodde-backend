@@ -1,4 +1,11 @@
 
+
+export class SubscriptionDO {
+    constructor(
+        
+    ) {}
+}
+
 export interface SubscriptionRepository {
 
 }

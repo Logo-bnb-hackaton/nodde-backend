@@ -4,53 +4,83 @@ import { GetItemCommand, QueryCommand, QueryCommandInput, ScanCommand, ScanComma
 import { GetItemCommandInput } from "@aws-sdk/client-dynamodb";
 import { PutItemCommandInput } from "@aws-sdk/client-dynamodb";
 import { PutItemCommand } from "@aws-sdk/client-dynamodb";
-import { marshall } from "@aws-sdk/util-dynamodb";
+import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 
 export class DbResult<Type> {
 
     public status: string;
-    public item?: Type
+    public item?: Type;
 
-    public constructor(status: string, item: Type) {
-        this.status = status;
-        this.item = item;
+    constructor(
+        status: string,
+        item?: Type
+    ) {
+        this.status = status
+        this.item = item
     }
+
 }
 
 export const get = async (params: GetItemCommandInput): Promise<DbResult<any>> => {
     try {
         const result = await dynamo.send(new GetItemCommand(params))
-        return new DbResult(Success, result.Item)
+        return {
+            status: Success,
+            item: result.Item
+        }
     } catch (error) {
         console.error(`Error when get params: ${params}`, error);
-        return new DbResult(Error, undefined)
+        return {
+            status: Error
+        }
     }
 }
 
 export const query = async (params: QueryCommandInput): Promise<DbResult<any>> => {
     try {
         const result = await dynamo.send(new QueryCommand(params))
-        
-        return new DbResult(Success, result.Items)
+        return {
+            status: Success,
+            item: result.Items
+        }
     } catch (error) {
         console.error(`Error when get params: ${params}`, error);
-        return new DbResult(Error, undefined)
+        return {
+            status: Error
+        }
     }
 }
 
 export const put = async (params: PutItemCommandInput): Promise<DbResult<any>> => {
     try {
         await dynamo.send(new PutItemCommand(params))
-        return new DbResult(Success, undefined)
+        return {
+            status: Success
+        }
     } catch (error) {
         console.error(`Error when save to db with params: ${params}`, error);
-        return new DbResult(Error, undefined)
+        return {
+            status: Error
+        }
     }
 }
 
 export enum OperationStatus {
     SUCCESS,
     ERROR
+}
+
+export const getItem = async (params: {TableName: string, Key: any}): Promise<Record<string, any>> => {
+    
+    const input: GetItemCommandInput = {
+        TableName: params.TableName,
+        Key: marshall(params.Key, {
+            convertClassInstanceToMap: true
+        })
+    }
+
+    return dynamo.send(new GetItemCommand(input))
+        .then(i => unmarshall(i.Item!))
 }
 
 export const putItem = async (params: {TableName: string, Item: any}): Promise<OperationStatus> => {

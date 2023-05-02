@@ -1,14 +1,14 @@
 import { OperationStatus } from "@/db/db";
-import { Profile, ProfileRepository, profileRepository } from "./profile-repository";
+import { ProfileDO, ProfileRepository, profileRepository } from "./profile-repository";
 
 export interface ProfileService {
-    save(profile: Profile): Promise<Profile>
+    save(profile: ProfileDO): Promise<ProfileDO>
 }
 
 export class ProfileServiceImpl implements ProfileService {
     constructor(readonly profileRepository: ProfileRepository) {}
 
-    async save(profile: Profile): Promise<Profile> {
+    async save(profile: ProfileDO): Promise<ProfileDO> {
         const operationStatus = await profileRepository.save(profile)
         if (operationStatus === OperationStatus.SUCCESS) {
             return profile

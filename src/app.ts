@@ -5,17 +5,124 @@ import { profileController } from './controller/ProfileController';
 import { subscriptionController } from './controller/SubscriptionController';
 import dotenv from 'dotenv';
 import { telegramController } from './controller/TelegramController';
+import { SiweErrorType, SiweMessage, generateNonce } from 'siwe';
+import Session from 'express-session';
+import { JsonRpcProvider, Provider } from 'ethers';
 
 dotenv.config();
 
+declare module 'express-session' {
+    interface SessionData {
+        siwe: SiweMessage;
+        nonce: string;
+        ens: string;
+    }
+}
+
 const app: Express = express();
 app.use(json());
+
+app.use(Session({
+    name: "siwe",
+    secret: "siwe-secret", // change to env
+    resave: true,
+    saveUninitialized: true,
+    cookie: { secure: false, sameSite: true }
+}))
 
 app.get('/', (_: Request, res: Response) => {
     res.send({
         status: "ok"
     });
 })
+
+
+app.get('/api/nonce', async (req, res) => {
+    req.session.nonce = generateNonce();
+    req.session.save(() => res.status(200).send(req.session.nonce).end());
+});
+
+app.get('/api/me', async (req, res) => {
+    if (!req.session.siwe) {
+        res.status(401).json({ message: 'You have to first sign_in' });
+        return;
+    }
+    res.status(200)
+        .json({
+            text: req.session.siwe.address,
+            address: req.session.siwe.address,
+            ens: req.session.ens,
+        })
+        .end();
+});
+
+
+app.post('/api/sign_in', async (req, res) => {
+    try {
+        const { ens, signature } = req.body;
+        if (!req.body.message) {
+            res.status(422).json({ message: 'Expected signMessage object as body.' });
+            return;
+        }
+
+        const message = new SiweMessage(req.body.message);
+
+        const infuraProvider = new JsonRpcProvider(
+            `${getInfuraUrl(message.chainId)}/8fcacee838e04f31b6ec145eb98879c8`,
+            message.chainId,
+        );
+
+        await infuraProvider.ready;
+
+        const { data: fields} = await message.verify({ signature, nonce: req.session.nonce }, { provider: infuraProvider });
+
+        req.session.siwe = fields;
+        req.session.ens = ens;
+        req.session.nonce = null;
+        req.session.cookie.expires = new Date(fields.expirationTime);
+        req.session.save(() =>
+            res
+                .status(200)
+                .json({
+                    text: req.session.siwe.address,
+                    address: req.session.siwe.address,
+                    ens: req.session.ens,
+                })
+                .end(),
+        );
+    } catch (e) {
+        req.session.siwe = null;
+        req.session.nonce = null;
+        req.session.ens = null;
+        console.error(e);
+        let err = e as Error
+        switch (e) {
+            case SiweErrorType.EXPIRED_MESSAGE: {
+                req.session.save(() => res.status(440).json({ message: err.message }));
+                break;
+            }
+            case SiweErrorType.INVALID_SIGNATURE: {
+                req.session.save(() => res.status(422).json({ message: err.message }));
+                break;
+            }
+            default: {
+                req.session.save(() => res.status(500).json({ message: err.message }));
+                break;
+            }
+        }
+    }
+});
+
+app.post('/api/sign_out', async (req, res) => {
+    if (!req.session.siwe) {
+        res.status(401).json({ message: 'You have to first sign_in' });
+        return;
+    }
+
+    req.session.destroy(() => {
+        res.status(205).send();
+    });
+});
 
 app.post('/auth', authController.authenticate)
 
@@ -40,3 +147,18 @@ app.use((_, res, _2) => {
 });
 
 export { app }
+
+const getInfuraUrl = (chainId: number) => {
+    switch (chainId) {
+        case 1:
+            return 'https://mainnet.infura.io/v3';
+        case 3:
+            return 'https://ropsten.infura.io/v3';
+        case 4:
+            return 'https://rinkeby.infura.io/v3';
+        case 5:
+            return 'https://goerli.infura.io/v3';
+        case 137:
+            return 'https://polygon-mainnet.infura.io/v3';
+    }
+};
