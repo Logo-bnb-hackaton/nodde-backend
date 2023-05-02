@@ -1,9 +1,8 @@
 import { NextFunction, Request, Response } from "express"
 import { ProfileTableName, toErrorResponse, toSuccessResponse } from "../common";
 import { getObjById, s3DataToBase64String, updateImage } from "../s3/image";
-import { loadByNId, put } from "../db/db";
+import { OperationStatus, loadByNId, putItem } from "../db/db";
 import { SubscriptionTableName } from "@/subscription/subscription-repository";
-import { marshall } from "@aws-sdk/util-dynamodb";
 
 
 export interface SubscriptionController {
@@ -87,23 +86,19 @@ export class SubscriptionControllerImpl implements SubscriptionController {
         }
     
         console.log('Updating subscription');
-        try {
 
-            put({
-                TableName: SubscriptionTableName,
-                Item: marshall(subscription),
-            })
-    
-            res.send({status: "success"});
-        } catch (e) {
-            console.error(e)
-            let errorMessage = "internal error"
+        const status = await putItem({
+            TableName: SubscriptionTableName,
+            Item: subscription
+        })
+
+        if (status === OperationStatus.SUCCESS) {
+            res.send({status: "success"})
+        } else {
             res.send({
                 status: "error",
-                errorMessage: errorMessage
+                errorMessage: "internal error"
             });
-        } finally {
-            console.log("Subscription was updated."); 
         }
 
         next()

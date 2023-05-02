@@ -9,10 +9,21 @@ export class Profile {
 }
 
 export interface ProfileRepository {
+
+    putProfile(profile: any): Promise<OperationStatus>
+
     save(profile: Profile): Promise<OperationStatus>
 }
 
 export class ProfileRepositoryImpl implements ProfileRepository {
+
+    async putProfile(profile: any): Promise<OperationStatus> {
+        return putItem({
+            TableName: ProfileTableName,
+            Item: profile
+        })
+    }
+
     async save(profile: Profile): Promise<OperationStatus> {
         return putItem({
             TableName: ProfileTableName,

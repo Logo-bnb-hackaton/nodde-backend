@@ -23,7 +23,9 @@ export class AuthRepositoryImpl implements AuthRepository {
     async saveAuthNonce(authNonde: AuthNonce): Promise<DbResult<AuthNonce>> {
         return put({
             TableName: this.tableName,
-            Item: marshall(authNonde)
+            Item: marshall(authNonde, {
+                convertClassInstanceToMap: true
+            })
         })
     }
     async getAuthNonceByAddress(address: string): Promise<DbResult<AuthNonce | undefined>> {

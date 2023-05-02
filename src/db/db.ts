@@ -57,7 +57,10 @@ export const putItem = async (params: {TableName: string, Item: any}): Promise<O
     try {
         const input: PutItemCommandInput = {
             TableName: params.TableName,
-            Item: marshall(params.Item)
+            Item: marshall(params.Item, {
+                convertClassInstanceToMap: true,
+                convertEmptyValues: true
+            })
         }
         await dynamo.send(new PutItemCommand(input))
         return OperationStatus.SUCCESS

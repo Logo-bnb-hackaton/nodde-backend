@@ -2,10 +2,9 @@ import { NextFunction, Request, Response } from "express";
 import { ProfileService, profileService } from "../profile/profile-service";
 import { ApiResponse } from "../api/ApiResponse";
 import { getObjById, s3DataToBase64String, updateImage } from "../s3/image";
-import { loadByNId, put } from "../db/db";
+import { OperationStatus, loadByNId, putItem } from "../db/db";
 import { subscriptionService, SubscriptionService } from "../subscription/subscription-service";
 import { toSuccessResponse, toErrorResponse, ProfileTableName } from "../common";
-import { marshall } from "@aws-sdk/util-dynamodb";
 
 export interface ProfileController {
     update(req: Request, res: Response, next: NextFunction): Promise<void>
@@ -40,20 +39,21 @@ export class ProfileControllerImpl implements ProfileController {
         }
     
         console.log('Updating profile');
-        try {
 
-            put({
-                TableName: ProfileTableName,
-                Item: marshall(profile)
-            })
-    
-            res.send(toSuccessResponse(undefined));
-        } catch (e) {
-            console.error(e)
-            res.send(toErrorResponse("internal error"));
-        } finally {
-            console.log("Profile was updated.");
+        const status = await putItem({
+            TableName: ProfileTableName,
+            Item: profile
+        })
+
+        if (status === OperationStatus.SUCCESS) {
+            res.send({status: "success"})
+        } else {
+            res.send({
+                status: "error",
+                errorMessage: "internal error"
+            });
         }
+
         next()
     }
 
