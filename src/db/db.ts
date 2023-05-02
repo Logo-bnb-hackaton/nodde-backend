@@ -4,6 +4,7 @@ import { GetItemCommand, QueryCommand, QueryCommandInput, ScanCommand, ScanComma
 import { GetItemCommandInput } from "@aws-sdk/client-dynamodb";
 import { PutItemCommandInput } from "@aws-sdk/client-dynamodb";
 import { PutItemCommand } from "@aws-sdk/client-dynamodb";
+import { marshall } from "@aws-sdk/util-dynamodb";
 
 export class DbResult<Type> {
 
@@ -29,6 +30,7 @@ export const get = async (params: GetItemCommandInput): Promise<DbResult<any>> =
 export const query = async (params: QueryCommandInput): Promise<DbResult<any>> => {
     try {
         const result = await dynamo.send(new QueryCommand(params))
+        
         return new DbResult(Success, result.Items)
     } catch (error) {
         console.error(`Error when get params: ${params}`, error);
@@ -43,6 +45,25 @@ export const put = async (params: PutItemCommandInput): Promise<DbResult<any>> =
     } catch (error) {
         console.error(`Error when save to db with params: ${params}`, error);
         return new DbResult(Error, undefined)
+    }
+}
+
+export enum OperationStatus {
+    SUCCESS,
+    ERROR
+}
+
+export const putItem = async (params: {TableName: string, Item: any}): Promise<OperationStatus> => {
+    try {
+        const input: PutItemCommandInput = {
+            TableName: params.TableName,
+            Item: marshall(params.Item)
+        }
+        await dynamo.send(new PutItemCommand(input))
+        return OperationStatus.SUCCESS
+    } catch (error) {
+        console.error(error)
+        return OperationStatus.ERROR
     }
 }
 

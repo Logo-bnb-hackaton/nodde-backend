@@ -1,5 +1,6 @@
 import { Success } from "@/common"
 import { DbResult, put, query } from "../db/db"
+import { marshall, unmarshall } from "@aws-sdk/util-dynamodb"
 
 export class AuthNonce {
     constructor(
@@ -22,20 +23,7 @@ export class AuthRepositoryImpl implements AuthRepository {
     async saveAuthNonce(authNonde: AuthNonce): Promise<DbResult<AuthNonce>> {
         return put({
             TableName: this.tableName,
-            Item: {
-                address: {
-                    S: authNonde.address
-                },
-                nonce: {
-                    S: authNonde.nonce
-                },
-                createdAt: {
-                    N: authNonde.createdAt.toString()
-                },
-                expiredIn: {
-                    N: authNonde.expiredIn.toString()
-                }
-            }
+            Item: marshall(authNonde)
         })
     }
     async getAuthNonceByAddress(address: string): Promise<DbResult<AuthNonce | undefined>> {
@@ -50,7 +38,13 @@ export class AuthRepositoryImpl implements AuthRepository {
         })
 
         if (result.status === Success && (result.item as Array<any>).length == 1) {
-            return new DbResult(Success, result.item[0])
+            const items = (result.item as Array<any>).map((i) => unmarshall(i))
+            return new DbResult(Success, new AuthNonce(
+                items[0]!["address"],
+                items[0]!["nonce"],
+                items[0]!["createdAt"],
+                items[0]!["expiredIn"]
+            ))
         }
 
         return result

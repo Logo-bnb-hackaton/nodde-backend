@@ -27,11 +27,13 @@ app.post('/subscription/update', authMiddleware.authorizeWallet, subscriptionCon
 
 app.get('/subscription/', authMiddleware.authorizeWallet, subscriptionController.getSubscriptionDescription)
 
-app.get('/telegram/get-invite-link', authMiddleware.authorizeWallet, telegramController.getInviteLink)
+app.get('/telegram/get-invite-code', authMiddleware.authorizeWallet, telegramController.getInviteLink)
 
-app.post('/telegram/generate-invite-link', authMiddleware.authorizeWallet, telegramController.generateInviteLink)
+app.post('/telegram/generate-invite-code', authMiddleware.authorizeWallet, telegramController.generateInviteLink)
 
 app.post('/telegram/bind-chat', authMiddleware.authorizeWallet, telegramController.bindChat)
+
+app.get('/telegram/get-chat-binding-status', authMiddleware.authorizeWallet, telegramController.getChatBindingStatus)
 
 app.use((_, res, _2) => {
     res.status(404).json({ error: 'NOT FOUND' });

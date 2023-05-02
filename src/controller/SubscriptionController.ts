@@ -3,6 +3,7 @@ import { ProfileTableName, toErrorResponse, toSuccessResponse } from "../common"
 import { getObjById, s3DataToBase64String, updateImage } from "../s3/image";
 import { loadByNId, put } from "../db/db";
 import { SubscriptionTableName } from "@/subscription/subscription-repository";
+import { marshall } from "@aws-sdk/util-dynamodb";
 
 
 export interface SubscriptionController {
@@ -90,38 +91,7 @@ export class SubscriptionControllerImpl implements SubscriptionController {
 
             put({
                 TableName: SubscriptionTableName,
-                Item: {
-                    id: {
-                        S: subscription.id
-                    },
-                    ownerId: {
-                        S: subscription.ownerId
-                    },
-                    status: {
-                        S: subscription.status
-                    },
-                    title: {
-                        S: subscription.title
-                    },
-                    description: {
-                        S: subscription.description
-                    },
-                    mainImageId: {
-                        S: subscription.mainImageId != undefined ? subscription.mainImageId : ""
-                    },
-                    previewImageId: {
-                        S: subscription.previewImageId != undefined ? subscription.previewImageId : ""
-                    }, 
-                    price: {
-                        N: subscription.price
-                    },
-                    coin: {
-                        S: subscription.coin
-                    },
-                    instant: {
-                        N: subscription.instant
-                    }
-                },
+                Item: marshall(subscription),
             })
     
             res.send({status: "success"});

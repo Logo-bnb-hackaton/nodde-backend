@@ -21,7 +21,7 @@ provider:
     httpApi: true
   httpApi:
     cors: true  
-    iamRoleStatements:
+  iamRoleStatements:
     - Effect: Allow
       Action:
         - dynamodb:DescribeTable
@@ -63,7 +63,7 @@ provider:
         - dynamodb:PutItem
         - dynamodb:UpdateItem
         - dynamodb:DeleteItem
-      Resource: "arn:aws:dynamodb:${self:provider.region}:*:table/auth-nonce"
+      Resource: "arn:aws:dynamodb:${self:provider.region}:*:table/auth-nonce"  
 
 functions:
   app:

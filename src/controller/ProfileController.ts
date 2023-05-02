@@ -5,6 +5,7 @@ import { getObjById, s3DataToBase64String, updateImage } from "../s3/image";
 import { loadByNId, put } from "../db/db";
 import { subscriptionService, SubscriptionService } from "../subscription/subscription-service";
 import { toSuccessResponse, toErrorResponse, ProfileTableName } from "../common";
+import { marshall } from "@aws-sdk/util-dynamodb";
 
 export interface ProfileController {
     update(req: Request, res: Response, next: NextFunction): Promise<void>
@@ -43,26 +44,7 @@ export class ProfileControllerImpl implements ProfileController {
 
             put({
                 TableName: ProfileTableName,
-                Item: {
-                    id: {
-                        N: profile.id,
-                    },
-                    title: {
-                        S: profile.title
-                    },
-                    description: {
-                        S: profile.description
-                    },
-                    logoId: {
-                        S: profile.logoId != undefined ? profile.logoId : ""
-                    },
-                    socialMediaLinks: {
-                        L: profile.socialMediaLinks
-                    },
-                    instant: {
-                        N: profile.instant
-                    }
-                }
+                Item: marshall(profile)
             })
     
             res.send(toSuccessResponse(undefined));

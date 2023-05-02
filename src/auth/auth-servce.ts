@@ -37,13 +37,13 @@ export class AuthServiceImpl implements AuthService {
             3600
         )
 
-        let { status, item } = await this.authRepo.saveAuthNonce(newAuthNonce)
+        let { status } = await this.authRepo.saveAuthNonce(newAuthNonce)
 
         if (status !== Success) {
             throw new Error(`Error when create new auth nonce for address ${address}`)
         }
 
-        return item!
+        return (await this.authRepo.getAuthNonceByAddress(address)).item!
     }
 
     private async generateNewNonce(length: number): Promise<string> {
