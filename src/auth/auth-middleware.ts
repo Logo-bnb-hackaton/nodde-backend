@@ -1,6 +1,5 @@
 import { Request, Response, NextFunction } from "express";
 import { AuthService, authService } from "./auth-servce";
-import { ApiErrorResponse } from "../api/ApiErrorResponse";
 
 export class AuthMiddleware {
 
@@ -8,13 +7,9 @@ export class AuthMiddleware {
 
     async authorizeWallet(req: Request, res: Response, next: NextFunction) {
         
-        let isAuthorized = await authService.isAuthorized(req)
-
-        if (!isAuthorized) {
-            console.log(`Unauthorized request ${req}`)
-            return res
-                .status(403)
-                .send(new ApiErrorResponse("B-10001", "User is unauthorized"))
+        if (!req.session.siwe) {
+            res.status(401).json({ message: 'You have to first sign_in' });
+            return;
         }
 
         next()
