@@ -1,5 +1,23 @@
 import { DynamoDBClient } from '@aws-sdk/client-dynamodb'
+import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb'
 import { AWS_REGION } from '../common'
 
+const marshallOptions = {
+    // Whether to automatically convert empty strings, blobs, and sets to `null`.
+    convertEmptyValues: true, // false, by default.
+    // Whether to remove undefined values while marshalling.
+    removeUndefinedValues: true, // false, by default.
+    // Whether to convert typeof object to map attribute.
+    convertClassInstanceToMap: true, // false, by default.
+};
+
+const unmarshallOptions = {
+    // Whether to return numbers as a string instead of converting them to native JavaScript numbers.
+    wrapNumbers: false, // false, by default.
+};
+
+const translateConfig = { marshallOptions, unmarshallOptions };
+
 const dynamo = new DynamoDBClient({ region: AWS_REGION })
-export { dynamo }
+const documentClient = DynamoDBDocumentClient.from(dynamo, translateConfig);
+export { dynamo, documentClient }

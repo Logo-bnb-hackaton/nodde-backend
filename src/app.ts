@@ -7,7 +7,8 @@ import dotenv from 'dotenv';
 import { telegramController } from './controller/TelegramController';
 import { SiweErrorType, SiweMessage, generateNonce } from 'siwe';
 import Session from 'express-session';
-import { JsonRpcProvider, Provider } from 'ethers';
+import { SessionStore } from './store/SessionStore';
+
 
 dotenv.config();
 
@@ -16,6 +17,7 @@ declare module 'express-session' {
         siwe: SiweMessage;
         nonce: string;
         ens: string;
+        updated: boolean;
     }
 }
 
@@ -25,7 +27,14 @@ app.use(json());
 app.use(Session({
     name: "siwe",
     secret: "siwe-secret", // change to env
-    resave: true,
+    resave: false,
+    store: new SessionStore({
+        table: {
+            name: "nodde-sessions"
+        },
+        touchInterval: 30000,
+        ttl: 86400000
+    }),
     saveUninitialized: true,
     cookie: { secure: false, sameSite: true }
 }))
@@ -59,22 +68,17 @@ app.get('/api/me', async (req, res) => {
 
 app.post('/api/sign_in', async (req, res) => {
     try {
-        const { ens, signature } = req.body;
-        if (!req.body.message) {
+        const body = JSON.parse(Buffer.from(req.body).toString())
+        const { ens, signature } = body;
+        console.log(ens + " " + signature)
+        if (!body.message) {
             res.status(422).json({ message: 'Expected signMessage object as body.' });
             return;
         }
 
         const message = new SiweMessage(req.body.message);
 
-        const infuraProvider = new JsonRpcProvider(
-            `${getInfuraUrl(message.chainId)}/8fcacee838e04f31b6ec145eb98879c8`,
-            message.chainId,
-        );
-
-        await infuraProvider.ready;
-
-        const { data: fields} = await message.verify({ signature, nonce: req.session.nonce }, { provider: infuraProvider });
+        const { data: fields } = await message.verify({ signature, nonce: req.session.nonce });
 
         req.session.siwe = fields;
         req.session.ens = ens;
