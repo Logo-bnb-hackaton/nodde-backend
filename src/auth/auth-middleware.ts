@@ -1,14 +1,19 @@
-import { Request, Response, NextFunction } from "express";
-import { AuthService, authService } from "./auth-servce";
+import {Request, Response, NextFunction} from "express";
+import * as console from "console";
 
 export class AuthMiddleware {
 
-    constructor(readonly authService: AuthService) {}
+    constructor() {
+    }
 
     async authorizeWallet(req: Request, res: Response, next: NextFunction) {
-        
+        console.log('AuthMiddleware')
+        console.log(req);
+        console.log(req.session);
+        console.log(req);
+
         if (!req.session.siwe) {
-            res.status(401).json({ message: 'You have to first sign_in' });
+            res.status(401).json({message: 'You have to first sign_in'});
             return;
         }
 
@@ -17,5 +22,5 @@ export class AuthMiddleware {
     }
 }
 
-const authMiddleware = new AuthMiddleware(authService)
-export { authMiddleware }
+const authMiddleware = new AuthMiddleware()
+export {authMiddleware}
