@@ -1,21 +1,28 @@
-import { NextFunction, Request, Response } from "express";
-import { ProfileService, profileService } from "../profile/profile-service";
-import { ApiResponse } from "../api/ApiResponse";
-import { getObjById, s3DataToBase64String, updateImage } from "../s3/image";
-import { OperationStatus, loadByNId, putItem } from "../db/db";
-import { subscriptionService, SubscriptionService } from "../subscription/subscription-service";
-import { toSuccessResponse, toErrorResponse, ProfileTableName } from "../common";
+import {NextFunction, Request, Response} from "express";
+import {ProfileService, profileService} from "@/profile/profile-service";
+import {ApiResponse} from "@/api/ApiResponse";
+import {getObjById, s3DataToBase64String, updateImage} from "@/s3/image";
+import {OperationStatus, loadByNId, putItem, loadBySId} from "@/db/db";
+import {subscriptionService, SubscriptionService} from "@/subscription/subscription-service";
+import {toSuccessResponse, toErrorResponse, ProfileTableName} from "@/common";
+import * as console from "console";
 
 export interface ProfileController {
     update(req: Request, res: Response, next: NextFunction): Promise<void>
+
     profile(req: Request, res: Response, next: NextFunction): Promise<void>
+}
+
+interface LoadProfileBody {
+    profileId: string
 }
 
 export class ProfileControllerImpl implements ProfileController {
     constructor(
         readonly profileService: ProfileService,
         readonly subscriptionService: SubscriptionService
-    ) { }
+    ) {
+    }
 
     async update(req: Request, res: Response, next: NextFunction): Promise<void> {
         const newProfileData = JSON.parse(Buffer.from(req.body).toString())
@@ -25,10 +32,10 @@ export class ProfileControllerImpl implements ProfileController {
             res.send(toErrorResponse("profileId is null"));
             return
         }
-    
+
         const oldProfile = (await loadByNId(ProfileTableName, profileId)).item;
         const logoS3Id = await updateImage(ProfileImageBucket, oldProfile?.logoId, newProfileData.logo)
-    
+
         const profile = {
             id: profileId,
             title: newProfileData.title,
@@ -37,7 +44,7 @@ export class ProfileControllerImpl implements ProfileController {
             socialMediaLinks: newProfileData.socialMediaLinks,
             instant: new Date().getTime().toString(),
         }
-    
+
         console.log('Updating profile');
 
         const status = await putItem({
@@ -58,9 +65,11 @@ export class ProfileControllerImpl implements ProfileController {
     }
 
     async profile(req: Request, res: Response, next: NextFunction): Promise<void> {
+        console.log(`Start processing get porfile request`);
+        console.log(req);
 
-        const body = JSON.parse(Buffer.from(req.body).toString())
-        const profileId = body.profileId;
+        const {profileId} = req.body as LoadProfileBody;
+        console.log(`profile id: ${profileId}`);
 
         if (!profileId) {
             console.log('Error, profileId is null.');
@@ -70,7 +79,8 @@ export class ProfileControllerImpl implements ProfileController {
             return
         }
 
-        const profile = (await loadByNId("Community-profile", profileId)).item
+        const profile = (await loadBySId("Community-profile", profileId)).item
+        console.log(`profile: ${profile}`);
 
         if (!profile) {
             console.log(`Can't find profile with profileId: ${profileId}`);
@@ -98,4 +108,4 @@ export class ProfileControllerImpl implements ProfileController {
 }
 
 const profileController: ProfileController = new ProfileControllerImpl(profileService, subscriptionService)
-export { profileController }
+export {profileController}

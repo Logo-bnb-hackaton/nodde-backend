@@ -1,4 +1,3 @@
-import { X_API_WALLET_ADDRESS_HEADER } from "@/auth/auth-servce";
 import { toErrorResponse, toSuccessResponse } from "@/common";
 import { getJsonFromLambdaResponse, invokeLambda } from "@/lambda/wrap";
 import { NextFunction, Request, Response } from "express";
@@ -9,6 +8,8 @@ export interface TelegramController {
     bindChat(req: Request, res: Response, next: NextFunction): Promise<void>
     getChatBindingStatus(req: Request, res: Response, next: NextFunction): Promise<void>
 }
+
+export const X_API_WALLET_ADDRESS_HEADER = "x-api-wallet-address"
 
 export class TelegramControllerImpl implements TelegramController {
 
