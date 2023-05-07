@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
-import { ProfileService, profileService } from "@/profile/profile-service";
-import { ApiResponse } from "@/api/ApiResponse";
-import { BriefSubscriptionInfo, subscriptionService, SubscriptionService } from "@/subscription/subscription-service";
+import { profileService } from "@/profile/profile-service";
+import { apiError, unknownApiError } from "@/api/ApiResponse";
+import { BriefSubscriptionInfo, subscriptionService } from "@/subscription/subscription-service";
 import { toSuccessResponse, toErrorResponse } from "@/common";
 import { ProfileDO } from "@/profile/profile-repository";
 
@@ -42,12 +42,6 @@ interface LoadProfileBody {
 
 export class ProfileControllerImpl implements ProfileController {
 
-    constructor(
-        readonly profileService: ProfileService,
-        readonly subscriptionService: SubscriptionService
-    ) {
-    }
-
     async update(req: Request, res: Response): Promise<void> {
         try {
 
@@ -56,19 +50,14 @@ export class ProfileControllerImpl implements ProfileController {
 
             if (!profileId) {
                 console.log("profileId is null");
-                res.send(toErrorResponse("profileId is null"));
+                res.json(apiError('bad_request', 'Id not passed')).status(400);
                 return
             }
 
             const currentProfile = await profileService.getById(profileId);
             if (!currentProfile) {
                 console.log(`Profile with id ${profileId} not found`);
-                res.json({
-                    error: {
-                        code: 'not_found',
-                        message: 'Profile not found'
-                    }
-                }).status(404);
+                res.json(apiError('not_found', 'Profile not found')).status(404);
                 return;
             }
 
@@ -88,12 +77,7 @@ export class ProfileControllerImpl implements ProfileController {
             res.send({ status: 'success' });
         } catch (err) {
             console.error(err);
-            res.json({
-                error: {
-                    code: 'unknown_error',
-                    message: 'Oops. Something went wrong'
-                }
-            }).status(500);
+            res.json(unknownApiError).status(500);
         }
     }
 
@@ -106,7 +90,7 @@ export class ProfileControllerImpl implements ProfileController {
             if (!profileId) {
                 console.log('Error, profileId is null.');
                 res
-                    .send(ApiResponse.error("", "Error, profileId is null."))
+                    .send(apiError("", "Error, profileId is null."))
                     .status(400)
                 return
             }
@@ -138,15 +122,10 @@ export class ProfileControllerImpl implements ProfileController {
 
         } catch (err) {
             console.error(err);
-            res.json({
-                error: {
-                    code: 'unknown_error',
-                    message: 'Oops. Something went wrong'
-                }
-            }).status(500);
+            res.json(unknownApiError).status(500);
         }
     }
 }
 
-const profileController: ProfileController = new ProfileControllerImpl(profileService, subscriptionService)
+const profileController: ProfileController = new ProfileControllerImpl();
 export { profileController }

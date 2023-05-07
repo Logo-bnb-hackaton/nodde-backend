@@ -1,19 +1,31 @@
-import { Error } from "./ApiErrorResponse"
+export interface ApiResponse<T> {
+    data?: T
+    error?: ApiError
+}
 
-export class ApiResponse<T> {
-    
-    public data?: T
-    public error?: Error
+export interface ApiError {
+    code: string,
+    message: string
+}
 
-    static data<T>(data: T): ApiResponse<T> {
-        let apiResponse = new ApiResponse<T>()
-        apiResponse.data = data
-        return apiResponse
+export const unknownApiError: ApiResponse<void> = {
+    error: {
+        code: 'unknown_error',
+        message: 'Oops. Something went wrong'
     }
+}
 
-    static error<T>(code: string, message: string): ApiResponse<T> {
-        let apiResponse = new ApiResponse<T>()
-        apiResponse.error = new Error(code, message)
-        return apiResponse
+export const apiError = (code: string, message: string): ApiResponse<void> => {
+    return {
+        error: {
+            code: code,
+            message: message
+        }
+    }
+}
+
+export const apiResponse = <T>(data: T): ApiResponse<T> => {
+    return {
+        data: data
     }
 }

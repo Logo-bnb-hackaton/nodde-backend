@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { SiweErrorType, SiweMessage, generateNonce } from "siwe";
 import * as console from "console";
+import { unknownApiError } from "@/api/ApiResponse";
 
 interface SignInRequest {
     message: {
@@ -32,10 +33,13 @@ export class AuthControllerImpl implements AuthController {
     }
 
     async getNonce(req: Request, res: Response): Promise<void> {
-        req.session.nonce = generateNonce();
-        console.log('req with session');
-        console.log(JSON.stringify(req.session));
-        req.session.save(() => res.status(200).send(req.session.nonce).end());
+        try {
+            req.session.nonce = generateNonce();
+            req.session.save(() => res.status(200).send(req.session.nonce).end());
+        } catch (err) {
+            console.error(err);
+            res.json(unknownApiError).status(500);
+        }
     }
 
     async signIn(req: Request, res: Response): Promise<void> {
@@ -88,7 +92,7 @@ export class AuthControllerImpl implements AuthController {
             req.session.destroy(() => res.status(205).send());
         } catch (err) {
             console.error(err);
-            res.status(500).send();
+            res.status(500).json(unknownApiError);
         }
     }
 

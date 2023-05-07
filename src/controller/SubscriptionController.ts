@@ -1,9 +1,10 @@
-import {Request, Response} from "express"
-import {toErrorResponse, toSuccessResponse} from "@/common";
-import {SubscriptionDO, SubscriptionStatus} from "@/subscription/subscription-repository";
-import {ImageDto} from "./ProfileController";
-import {subscriptionService} from "@/subscription/subscription-service";
-import {subscriptionResourceRepository} from "@/subscription/subscription-resource-repository";
+import { Request, Response } from "express"
+import { toErrorResponse, toSuccessResponse } from "@/common";
+import { SubscriptionDO, SubscriptionStatus } from "@/subscription/subscription-repository";
+import { ImageDto } from "./ProfileController";
+import { subscriptionService } from "@/subscription/subscription-service";
+import { subscriptionResourceRepository } from "@/subscription/subscription-resource-repository";
+import { apiResponse, unknownApiError } from "@/api/ApiResponse";
 
 export interface GetSubscriptionDescriptionRequest {
     subscriptionId: string
@@ -90,12 +91,7 @@ export class SubscriptionControllerImpl implements SubscriptionController {
 
         } catch (err) {
             console.error(err);
-            res.json({
-                error: {
-                    code: 'unknown_error',
-                    message: 'Oops. Something went wrong'
-                }
-            }).status(500);
+            res.json(unknownApiError).status(500);
         }
 
     }
@@ -144,22 +140,15 @@ export class SubscriptionControllerImpl implements SubscriptionController {
                 instant: new Date().getTime().toString(),
             }
 
-            console.log('Updating subscription');
-
             await subscriptionService.put(subscriptionForUpdate)
 
-            res.json({status: 'success'})
+            res.json(apiResponse({ status: 'success' }));
         } catch (err) {
             console.error(err);
-            res.json({
-                error: {
-                    code: 'unknown_error',
-                    message: 'Oops. Something went wrong'
-                }
-            }).status(500);
+            res.json(unknownApiError).status(500);
         }
     }
 }
 
 const subscriptionController: SubscriptionController = new SubscriptionControllerImpl()
-export {subscriptionController}
+export { subscriptionController }

@@ -1,3 +1,4 @@
+import { unknownApiError } from "@/api/ApiResponse";
 import { toErrorResponse, toSuccessResponse } from "@/common";
 import { getJsonFromLambdaResponse, invokeLambda } from "@/lambda/wrap";
 import { Request, Response } from "express";
@@ -11,7 +12,7 @@ export interface TelegramController {
     bindChat(req: Request, res: Response): Promise<void>
 
     getChatBindingStatus(req: Request, res: Response): Promise<void>
-    
+
 }
 
 export const X_API_WALLET_ADDRESS_HEADER = "x-api-wallet-address"
@@ -37,9 +38,7 @@ export class TelegramControllerImpl implements TelegramController {
                     .send(toErrorResponse("Bad request"))
                     .status(invocationResult.StatusCode!)
             } else {
-                res
-                    .send(toErrorResponse("Something went wrong"))
-                    .status(500)
+                res.json(unknownApiError).status(500)
             }
         } catch (error) {
             console.error(error)
@@ -66,9 +65,7 @@ export class TelegramControllerImpl implements TelegramController {
                     .send(toErrorResponse("Bad request"))
                     .status(invocationResult.StatusCode!)
             } else {
-                res
-                    .send(toErrorResponse("Something went wrong"))
-                    .status(500)
+                res.json(unknownApiError).status(500)
             }
         } catch (error) {
             console.error(error)
