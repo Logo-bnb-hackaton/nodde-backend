@@ -1,6 +1,6 @@
-import { s3 } from "@/s3/s3";
-import { GetObjectCommand, GetObjectCommandInput, PutObjectCommand, PutObjectCommandInput } from "@aws-sdk/client-s3";
-import { randomUUID } from "crypto";
+import {s3} from "@/s3/s3";
+import {GetObjectCommand, GetObjectCommandInput, PutObjectCommand, PutObjectCommandInput} from "@aws-sdk/client-s3";
+import {randomUUID} from "crypto";
 
 const ProfileImageBucket = "community-profile-images-1r34goy";
 
@@ -11,7 +11,7 @@ export interface Image {
 
 export interface ProfileResourceRepository {
 
-    getImage(id: string): Promise<Image|undefined>
+    getImage(id: string): Promise<Image | undefined>
 
     save(base64Image: string): Promise<string>
 
@@ -21,18 +21,16 @@ export interface ProfileResourceRepository {
 
 class ProfileResourceRepositoryImpl implements ProfileResourceRepository {
 
-    async getImage(id: string): Promise<Image|undefined> {
+    async getImage(id: string): Promise<Image | undefined> {
 
         console.log(`Start getting image with ${id}`);
-        
+
         const input: GetObjectCommandInput = {
             Bucket: ProfileImageBucket,
             Key: id
         }
 
-        const command: GetObjectCommand = new GetObjectCommand(input);
-
-        const result = await s3.send(command);
+        const result = await s3.send(new GetObjectCommand(input));
 
         if (!result.Body) {
             console.log(`Can't find image with id ${id}`);
@@ -43,10 +41,10 @@ class ProfileResourceRepositoryImpl implements ProfileResourceRepository {
 
         return {
             id: id,
-            base64Data: `data:${result.ContentType};base64,${result.Body.transformToString('base64')}`
+            base64Data: `data:${result.ContentType};base64,${await result.Body.transformToString('base64')}`
         }
     }
-    
+
     async save(base64Image: string): Promise<string> {
 
         console.log(`Start saving new image with ${base64Image.substring(0, 20)}`);
@@ -77,7 +75,7 @@ class ProfileResourceRepositoryImpl implements ProfileResourceRepository {
     async update(id: string, newBase64Image: string): Promise<void> {
 
         console.log(`Start updating image with id ${id}`);
-        
+
         const currentImage = await this.getImage(id);
         if (!currentImage) {
             console.log(`No image found for id ${id}`);
@@ -108,4 +106,4 @@ class ProfileResourceRepositoryImpl implements ProfileResourceRepository {
 }
 
 const profileResourceRepository: ProfileResourceRepository = new ProfileResourceRepositoryImpl();
-export { profileResourceRepository }
+export {profileResourceRepository}

@@ -1,10 +1,9 @@
-import { Request, Response } from "express"
-import { toErrorResponse, toSuccessResponse } from "../common";
-import { s3DataToBase64String } from "../s3/image";
-import { SubscriptionDO, SubscriptionStatus } from "@/subscription/subscription-repository";
-import { ImageDto } from "./ProfileController";
-import { subscriptionService } from "@/subscription/subscription-service";
-import { subscriptionResourceRepository } from "@/subscription/subscription-resource-repository";
+import {Request, Response} from "express"
+import {toErrorResponse, toSuccessResponse} from "@/common";
+import {SubscriptionDO, SubscriptionStatus} from "@/subscription/subscription-repository";
+import {ImageDto} from "./ProfileController";
+import {subscriptionService} from "@/subscription/subscription-service";
+import {subscriptionResourceRepository} from "@/subscription/subscription-resource-repository";
 
 export interface GetSubscriptionDescriptionRequest {
     subscriptionId: string
@@ -79,11 +78,11 @@ export class SubscriptionControllerImpl implements SubscriptionController {
                 title: subscription.title,
                 mainImage: {
                     id: subscription.mainImageId,
-                    base64Image: s3DataToBase64String(mainImageBase64)
+                    base64Image: mainImageBase64
                 },
                 previewImage: {
                     id: subscription.previewImageId,
-                    base64Image: s3DataToBase64String(previewImageBase64)
+                    base64Image: previewImageBase64
                 }
             }
 
@@ -130,7 +129,7 @@ export class SubscriptionControllerImpl implements SubscriptionController {
             }
 
             const mainImageS3Id = await subscriptionService.uploadImage(oldSubscription.id, updateSubscriptionRequest.mainImage.base64Image);
-            const previewImgS3Id = await subscriptionService.uploadImage(oldSubscription.previewImageId,updateSubscriptionRequest.previewImage.base64Image);
+            const previewImgS3Id = await subscriptionService.uploadImage(oldSubscription.previewImageId, updateSubscriptionRequest.previewImage.base64Image);
 
             const subscriptionForUpdate: SubscriptionDO = {
                 id: subscriptionId,
@@ -149,7 +148,7 @@ export class SubscriptionControllerImpl implements SubscriptionController {
 
             await subscriptionService.put(subscriptionForUpdate)
 
-            res.json({ status: 'success' })
+            res.json({status: 'success'})
         } catch (err) {
             console.error(err);
             res.json({
@@ -163,4 +162,4 @@ export class SubscriptionControllerImpl implements SubscriptionController {
 }
 
 const subscriptionController: SubscriptionController = new SubscriptionControllerImpl()
-export { subscriptionController }
+export {subscriptionController}

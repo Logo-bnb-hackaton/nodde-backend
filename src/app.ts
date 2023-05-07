@@ -31,8 +31,6 @@ app.use(cors({
 
 }));
 
-app.use(cookieParser());
-
 app.use(Session({
     name: "siwe",
     secret: "siwe-secret", // change to env
@@ -86,7 +84,3 @@ app.use((_, res, _2) => {
 });
 
 export { app }
-
-function cookieParser(): any {
-    throw new Error('Function not implemented.');
-}

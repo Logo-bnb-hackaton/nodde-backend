@@ -27,9 +27,7 @@ export class SubscriptionResourceRepositoryImpl implements SubscriptionResourceR
             Key: id
         }
 
-        const command: GetObjectCommand = new GetObjectCommand(input);
-
-        const result = await s3.send(command);
+        const result = await s3.send(new GetObjectCommand(input));
 
         if (!result.Body) {
             console.log(`Can't find image with id ${id}`);
@@ -40,7 +38,7 @@ export class SubscriptionResourceRepositoryImpl implements SubscriptionResourceR
 
         return {
             id: id,
-            base64Data: `data:${result.ContentType};base64,${result.Body.transformToString('base64')}`
+            base64Data: `data:${result.ContentType};base64,${await result.Body.transformToString('base64')}`
         }
     }
     

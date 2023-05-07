@@ -1,7 +1,8 @@
-import { documentClient } from "@/db/dynamo"
-import { GetCommand, GetCommandInput, PutCommand, PutCommandInput } from "@aws-sdk/lib-dynamodb"
-import { marshall, unmarshall } from "@aws-sdk/util-dynamodb"
-
+import {documentClient} from "@/db/dynamo"
+import {marshall, unmarshall} from "@aws-sdk/util-dynamodb"
+import * as console from "console";
+import {GetItemCommand, PutItemCommand, PutItemCommandInput} from "@aws-sdk/client-dynamodb";
+import {GetItemCommandInput} from "@aws-sdk/client-dynamodb/dist-types/commands/GetItemCommand";
 
 export interface ProfileDO {
     id: string,
@@ -14,7 +15,7 @@ export interface ProfileDO {
 
 export interface ProfileRepository {
 
-    getById(id: string): Promise<ProfileDO|undefined>
+    getById(id: string): Promise<ProfileDO | undefined>
 
     put(profile: ProfileDO): Promise<void>
 
@@ -24,20 +25,14 @@ export class ProfileRepositoryImpl implements ProfileRepository {
 
     private table = 'Community-profile';
 
-    async getById(id: string): Promise<ProfileDO|undefined> {
-
+    async getById(id: string): Promise<ProfileDO | undefined> {
         console.log(`Start get profile ${id}`);
 
-        const input: GetCommandInput = {
+        const input: GetItemCommandInput = {
             TableName: this.table,
-            Key: marshall({
-                "id": id
-            })
+            Key: marshall({id: id})
         }
-
-        const command: GetCommand = new GetCommand(input);
-
-        const result = await documentClient.send(command);
+        const result = await documentClient.send(new GetItemCommand(input));
 
         if (!result.Item) {
             console.log(`Profile not found ${id}`);
@@ -45,28 +40,24 @@ export class ProfileRepositoryImpl implements ProfileRepository {
         }
 
         const profile = unmarshall(result.Item) as ProfileDO;
-
-        console.log(`Got frofile ${profile}`);
-
+        console.log(`Got profile ${profile}`);
         return profile;
     }
 
     async put(profile: ProfileDO): Promise<void> {
 
         console.log(`Start save profile ${profile}`);
-        
-        const input: PutCommandInput = {
+
+        const input: PutItemCommandInput = {
             TableName: this.table,
             Item: marshall(profile)
         };
 
-        const command: PutCommand = new PutCommand(input);
-
-        await documentClient.send(command);
+        await documentClient.send(new PutItemCommand(input));
 
         console.log(`Profile saved ${profile}`);
     }
 }
 
 const profileRepository: ProfileRepository = new ProfileRepositoryImpl()
-export { profileRepository }
+export {profileRepository}
