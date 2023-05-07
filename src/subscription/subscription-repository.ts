@@ -43,6 +43,11 @@ export class SubscriptionRepositoryImpl implements SubscriptionRepository {
 
         const result = await documentClient.send(command);
 
+        if (!result.Item) {
+            console.log(`Subscription not found ${id}`);
+            return undefined;
+        }
+
         const subscription = unmarshall(result.Item) as SubscriptionDO;
 
         console.log(`Finish get subscription ${subscription}`);

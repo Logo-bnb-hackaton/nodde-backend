@@ -51,16 +51,16 @@ export class SubscriptionControllerImpl implements SubscriptionController {
 
             const subscriptionId = body.subscriptionId;
             if (!subscriptionId) {
-                console.log(`Error, subId is null: ${subscriptionId}`);
-                res.send(toErrorResponse(`Error, subId is null: ${subscriptionId}`));
+                console.log(`Error, id is null: ${subscriptionId}`);
+                res.send(toErrorResponse(`Error, id is null: ${subscriptionId}`));
                 return
             }
 
             const subscription = await subscriptionService.getById(subscriptionId);
 
             if (!subscription) {
-                console.log(`Can't find subscription with subscriptionId: ${subscriptionId}`);
-                res.send(toErrorResponse(`Can't find subscription with subscriptionId: ${subscriptionId}`));
+                console.log(`Can't find subscription with id: ${subscriptionId}`);
+                res.send(toErrorResponse(`Can't find subscription with id: ${subscriptionId}`));
                 return
             }
 
@@ -95,8 +95,7 @@ export class SubscriptionControllerImpl implements SubscriptionController {
                     code: 'unknown_error',
                     message: 'Oops. Something went wrong'
                 }
-            });
-
+            }).status(500);
         }
 
     }
@@ -158,7 +157,7 @@ export class SubscriptionControllerImpl implements SubscriptionController {
                     code: 'unknown_error',
                     message: 'Oops. Something went wrong'
                 }
-            });
+            }).status(500);
         }
     }
 }

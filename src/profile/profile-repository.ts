@@ -14,7 +14,7 @@ export interface ProfileDO {
 
 export interface ProfileRepository {
 
-    getById(id: string): Promise<ProfileDO>
+    getById(id: string): Promise<ProfileDO|undefined>
 
     put(profile: ProfileDO): Promise<void>
 
@@ -24,7 +24,7 @@ export class ProfileRepositoryImpl implements ProfileRepository {
 
     private table = 'Community-profile';
 
-    async getById(id: string): Promise<ProfileDO> {
+    async getById(id: string): Promise<ProfileDO|undefined> {
 
         console.log(`Start get profile ${id}`);
 
@@ -38,6 +38,11 @@ export class ProfileRepositoryImpl implements ProfileRepository {
         const command: GetCommand = new GetCommand(input);
 
         const result = await documentClient.send(command);
+
+        if (!result.Item) {
+            console.log(`Profile not found ${id}`);
+            return undefined;
+        }
 
         const profile = unmarshall(result.Item) as ProfileDO;
 

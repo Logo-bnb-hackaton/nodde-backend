@@ -1,4 +1,4 @@
-import { GetObjectCommand, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
+import { GetObjectCommand, PutObjectCommand, DeleteObjectCommand, GetObjectCommandInput } from "@aws-sdk/client-s3";
 import { s3 } from "./s3";
 import { randomUUID } from "crypto";
 import md5 from "md5";
@@ -12,7 +12,8 @@ export function s3DataToBase64String(s3Data: any): string {
 }
 
 export async function getObjById(bucket: string, id: string): Promise<any> {
-    console.log(`Get object from s3. Bucket: ${bucket}, key: ${id}`)
+    console.log(`Get object from s3. Bucket: ${bucket}, key: ${id}`);
+
     const input = {
         Bucket: bucket,
         Key: id

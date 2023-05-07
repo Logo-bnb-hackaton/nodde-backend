@@ -1,8 +1,15 @@
+import { ImageDto } from "@/controller/ProfileController";
 import { scanTable } from "../db/db";
 import { getObjById, s3DataToBase64String } from "../s3/image";
-import { SubscriptionDO, SubscriptionRepository, subscriptionRepository } from "./subscription-repository";
+import { SubscriptionDO, SubscriptionRepository, SubscriptionStatus, subscriptionRepository } from "./subscription-repository";
 
-
+export interface BriefSubscriptionInfo {
+    id: string;
+    status: SubscriptionStatus,
+    ownerId: string;
+    title: string;
+    previewImage: ImageDto,
+}
 
 export interface SubscriptionService {
     getById(id: string): Promise<SubscriptionDO>

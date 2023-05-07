@@ -1,26 +1,15 @@
-import {NextFunction, Request, Response} from "express";
-import {ProfileService, profileService} from "@/profile/profile-service";
-import {ApiResponse} from "@/api/ApiResponse";
-import {getObjById, s3DataToBase64String, updateImage} from "@/s3/image";
-import {OperationStatus, loadByNId, putItem, loadBySId} from "@/db/db";
-import {subscriptionService, SubscriptionService} from "@/subscription/subscription-service";
-import {toSuccessResponse, toErrorResponse, ProfileTableName} from "@/common";
-import * as console from "console";
-import { SubscriptionStatus } from "@/subscription/subscription-repository";
+import { Request, Response } from "express";
+import { ProfileService, profileService } from "@/profile/profile-service";
+import { ApiResponse } from "@/api/ApiResponse";
+import { getObjById, s3DataToBase64String, updateImage } from "@/s3/image";
+import { BriefSubscriptionInfo, subscriptionService, SubscriptionService } from "@/subscription/subscription-service";
+import { toSuccessResponse, toErrorResponse } from "@/common";
+import { ProfileDO } from "@/profile/profile-repository";
 
 
 export interface ImageDto {
     id: string | undefined,
     base64Image: string | undefined,
-}
-
-export interface ProfileDTO {
-    id: string;
-    title: string;
-    description: string;
-    logo: ImageDto,
-    socialMediaLinks: string[];
-    subscriptions: BriefSubscriptionInfo[],
 }
 
 export interface UpdateProfileRequestDTO {
@@ -31,18 +20,21 @@ export interface UpdateProfileRequestDTO {
     socialMediaLinks: string[];
 }
 
-export interface BriefSubscriptionInfo {
+export interface GetProfileResponse {
     id: string;
-    status: SubscriptionStatus,
-    ownerId: string;
     title: string;
-    previewImage: ImageDto,
+    description: string;
+    logo: ImageDto,
+    socialMediaLinks: string[];
+    subscriptions: BriefSubscriptionInfo[],
 }
 
 export interface ProfileController {
-    update(req: Request, res: Response, next: NextFunction): Promise<void>
 
-    profile(req: Request, res: Response, next: NextFunction): Promise<void>
+    update(req: Request, res: Response): Promise<void>
+
+    profile(req: Request, res: Response): Promise<void>
+
 }
 
 interface LoadProfileBody {
@@ -50,94 +42,112 @@ interface LoadProfileBody {
 }
 
 export class ProfileControllerImpl implements ProfileController {
+
     constructor(
         readonly profileService: ProfileService,
         readonly subscriptionService: SubscriptionService
     ) {
     }
 
-    async update(req: Request, res: Response, next: NextFunction): Promise<void> {
-        const newProfileData = JSON.parse(Buffer.from(req.body).toString())
-        const profileId = newProfileData.id
-        if (!profileId) {
-            console.log("profileId is null");
-            res.send(toErrorResponse("profileId is null"));
-            return
+    async update(req: Request, res: Response): Promise<void> {
+        try {
+
+            const updateProfileRequest = req.body as UpdateProfileRequestDTO;
+            const profileId = updateProfileRequest.id;
+
+            if (!profileId) {
+                console.log("profileId is null");
+                res.send(toErrorResponse("profileId is null"));
+                return
+            }
+
+            const currentProfile = await profileService.getById(profileId);
+            if (!currentProfile) {
+                console.log(`Profile with id ${profileId} not found`);
+                res.json({
+                    error: {
+                        code: 'not_found',
+                        message: 'Profile not found'
+                    }
+                }).status(404);
+                return;
+            }
+
+            const logoS3Id = await updateImage(ProfileImageBucket, currentProfile?.logoId, updateProfileRequest.logo);
+
+            const profile: ProfileDO = {
+                id: profileId,
+                title: updateProfileRequest.title,
+                description: updateProfileRequest.description,
+                logoId: logoS3Id,
+                socialMediaLinks: updateProfileRequest.socialMediaLinks,
+                instant: new Date().getTime().toString(),
+            }
+
+            await profileService.save(profile);
+
+            res.send({ status: 'success' });
+        } catch (err) {
+            console.error(err);
+            res.json({
+                error: {
+                    code: 'unknown_error',
+                    message: 'Oops. Something went wrong'
+                }
+            }).status(500);
         }
-
-        const oldProfile = (await loadByNId(ProfileTableName, profileId)).item;
-        const logoS3Id = await updateImage(ProfileImageBucket, oldProfile?.logoId, newProfileData.logo)
-
-        const profile = {
-            id: profileId,
-            title: newProfileData.title,
-            description: newProfileData.description,
-            logoId: logoS3Id,
-            socialMediaLinks: newProfileData.socialMediaLinks,
-            instant: new Date().getTime().toString(),
-        }
-
-        console.log('Updating profile');
-
-        const status = await putItem({
-            TableName: ProfileTableName,
-            Item: profile
-        })
-
-        if (status === OperationStatus.SUCCESS) {
-            res.send({status: "success"})
-        } else {
-            res.send({
-                status: "error",
-                errorMessage: "internal error"
-            });
-        }
-
-        next()
     }
 
-    async profile(req: Request, res: Response, next: NextFunction): Promise<void> {
-        console.log(`Start processing get porfile request`);
-        console.log(req);
+    async profile(req: Request, res: Response): Promise<void> {
 
-        const {profileId} = req.body as LoadProfileBody;
-        console.log(`profile id: ${profileId}`);
+        try {
 
-        if (!profileId) {
-            console.log('Error, profileId is null.');
-            res
-                .send(ApiResponse.error("", "Error, profileId is null."))
-                .status(400)
-            return
-        }
+            const { profileId } = req.body as LoadProfileBody;
 
-        const profile = (await loadBySId("Community-profile", profileId)).item
-        console.log(`profile: ${profile}`);
+            if (!profileId) {
+                console.log('Error, profileId is null.');
+                res
+                    .send(ApiResponse.error("", "Error, profileId is null."))
+                    .status(400)
+                return
+            }
 
-        if (!profile) {
-            console.log(`Can't find profile with profileId: ${profileId}`);
-            res.send(toErrorResponse(`Can't find profile with profileId: ${profileId}`));
-            return
-        }
+            const profile = await profileService.getById(profileId);
 
-        const logoPromise = getObjById(ProfileImageBucket, profile.logoId)
-            .then(res => {
-                profile.logo = {
+            if (!profile) {
+                console.log(`Can't find profile with profileId: ${profileId}`);
+                res.send(toErrorResponse(`Can't find profile with profileId: ${profileId}`));
+                return
+            }
+
+            const logo = await getObjById(ProfileImageBucket, profile.logoId);
+            const subscriptions = await subscriptionService.loadBriefSubscription(profileId);
+
+            const response: GetProfileResponse = {
+                id: profile.id,
+                title: profile.title,
+                description: profile.description,
+                socialMediaLinks: profile.socialMediaLinks,
+                logo: {
                     id: profile.logoId,
-                    base64Image: s3DataToBase64String(res.data)
+                    base64Image: s3DataToBase64String(logo.data)
+                },
+                subscriptions: subscriptions
+            }
+
+            res.send(toSuccessResponse(response))
+
+        } catch (err) {
+            console.error(err);
+            res.json({
+                error: {
+                    code: 'unknown_error',
+                    message: 'Oops. Something went wrong'
                 }
-                profile.logoId = undefined
-            });
-
-        const subscriptionsPromise = await subscriptionService.loadBriefSubscription(profileId).then(s => profile.subscriptions = s);
-
-        await Promise.all([logoPromise, subscriptionsPromise])
-
-        res.send(toSuccessResponse(profile))
-
-        next()
+            }).status(500);
+        }
     }
 }
 
 const profileController: ProfileController = new ProfileControllerImpl(profileService, subscriptionService)
-export {profileController}
+export { profileController }
