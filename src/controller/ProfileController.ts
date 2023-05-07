@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
 import { ProfileService, profileService } from "@/profile/profile-service";
 import { ApiResponse } from "@/api/ApiResponse";
-import { getObjById, s3DataToBase64String, updateImage } from "@/s3/image";
 import { BriefSubscriptionInfo, subscriptionService, SubscriptionService } from "@/subscription/subscription-service";
 import { toSuccessResponse, toErrorResponse } from "@/common";
 import { ProfileDO } from "@/profile/profile-repository";
@@ -73,13 +72,13 @@ export class ProfileControllerImpl implements ProfileController {
                 return;
             }
 
-            const logoS3Id = await updateImage(ProfileImageBucket, currentProfile?.logoId, updateProfileRequest.logo);
+            const updatedLogo =  await profileService.uploadImage(currentProfile?.logoId, updateProfileRequest.logo.base64Image);
 
             const profile: ProfileDO = {
                 id: profileId,
                 title: updateProfileRequest.title,
                 description: updateProfileRequest.description,
-                logoId: logoS3Id,
+                logoId: updatedLogo,
                 socialMediaLinks: updateProfileRequest.socialMediaLinks,
                 instant: new Date().getTime().toString(),
             }
@@ -120,7 +119,7 @@ export class ProfileControllerImpl implements ProfileController {
                 return
             }
 
-            const logo = await getObjById(ProfileImageBucket, profile.logoId);
+            const logo = await profileService.getImage(profile.logoId);
             const subscriptions = await subscriptionService.loadBriefSubscription(profileId);
 
             const response: GetProfileResponse = {
@@ -130,7 +129,7 @@ export class ProfileControllerImpl implements ProfileController {
                 socialMediaLinks: profile.socialMediaLinks,
                 logo: {
                     id: profile.logoId,
-                    base64Image: s3DataToBase64String(logo.data)
+                    base64Image: logo.base64Data
                 },
                 subscriptions: subscriptions
             }

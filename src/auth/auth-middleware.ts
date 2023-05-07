@@ -1,5 +1,4 @@
 import {Request, Response, NextFunction} from "express";
-import * as console from "console";
 
 export class AuthMiddleware {
 
@@ -7,10 +6,6 @@ export class AuthMiddleware {
     }
 
     async authorizeWallet(req: Request, res: Response, next: NextFunction) {
-        console.log('AuthMiddleware')
-        console.log(req);
-        console.log(req.session);
-        console.log(req);
 
         if (!req.session.siwe) {
             res.status(401).json({message: 'You have to first sign_in'});
@@ -18,7 +13,7 @@ export class AuthMiddleware {
         }
 
         next()
-        return
+        return;
     }
 }
 

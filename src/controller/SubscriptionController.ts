@@ -1,9 +1,10 @@
 import { Request, Response } from "express"
 import { toErrorResponse, toSuccessResponse } from "../common";
-import { getObjById, s3DataToBase64String, updateImage } from "../s3/image";
+import { s3DataToBase64String } from "../s3/image";
 import { SubscriptionDO, SubscriptionStatus } from "@/subscription/subscription-repository";
 import { ImageDto } from "./ProfileController";
 import { subscriptionService } from "@/subscription/subscription-service";
+import { subscriptionResourceRepository } from "@/subscription/subscription-resource-repository";
 
 export interface GetSubscriptionDescriptionRequest {
     subscriptionId: string
@@ -64,8 +65,8 @@ export class SubscriptionControllerImpl implements SubscriptionController {
                 return
             }
 
-            const mainImageBase64 = (await getObjById(SubscriptionImageBucket, subscription.mainImageId)).data;
-            const previewImageBase64 = (await getObjById(SubscriptionImageBucket, subscription.previewImageId)).data;
+            const mainImageBase64 = (await subscriptionResourceRepository.getImage(subscription.mainImageId)).base64Data;
+            const previewImageBase64 = (await subscriptionResourceRepository.getImage(subscription.previewImageId)).base64Data;
 
             const response: GetSubscriptionDescriptionResponse = {
                 id: subscription.id,
@@ -128,9 +129,8 @@ export class SubscriptionControllerImpl implements SubscriptionController {
                     .status(404)
             }
 
-
-            const mainImageS3Id = await updateImage(SubscriptionImageBucket, oldSubscription.mainImageId, updateSubscriptionRequest.mainImage)
-            const previewImgS3Id = await updateImage(SubscriptionImageBucket, oldSubscription.previewImageId, updateSubscriptionRequest.previewImage)
+            const mainImageS3Id = await subscriptionService.uploadImage(oldSubscription.id, updateSubscriptionRequest.mainImage.base64Image);
+            const previewImgS3Id = await subscriptionService.uploadImage(oldSubscription.previewImageId,updateSubscriptionRequest.previewImage.base64Image);
 
             const subscriptionForUpdate: SubscriptionDO = {
                 id: subscriptionId,

@@ -1,7 +1,8 @@
 import { ImageDto } from "@/controller/ProfileController";
 import { scanTable } from "../db/db";
-import { getObjById, s3DataToBase64String } from "../s3/image";
 import { SubscriptionDO, SubscriptionRepository, SubscriptionStatus, subscriptionRepository } from "./subscription-repository";
+import { subscriptionResourceRepository } from "./subscription-resource-repository";
+import { Image } from "@/profile/profile-resource-repository";
 
 export interface BriefSubscriptionInfo {
     id: string;
@@ -15,21 +16,24 @@ export interface SubscriptionService {
     getById(id: string): Promise<SubscriptionDO>
     put(subscription: SubscriptionDO): Promise<void>
     loadBriefSubscription(profileId: string): Promise<any[]>
+    getImage(id: string): Promise<Image | undefined>
+    saveImage(base64Image: string): Promise<string>
+    uploadImage(id: string, base64Image: string): Promise<string>
 }
 
 export class SubscriptionServiceImpl implements SubscriptionService {
-    constructor(readonly subscriptionRepository: SubscriptionRepository) {}
 
-    
+    constructor(readonly subscriptionRepository: SubscriptionRepository) { }
+
     getById(id: string): Promise<SubscriptionDO> {
         return subscriptionRepository.getById(id);
-    }    
+    }
 
     put(subscription: SubscriptionDO): Promise<void> {
         return subscriptionRepository.put(subscription);
     }
-    
-    
+
+
     async loadBriefSubscription(profileId: string): Promise<any[]> {
         console.log(`Loading brief subscription info for profile ${profileId}`)
         const subscriptions = (await scanTable("Community-subscription"))
@@ -45,10 +49,14 @@ export class SubscriptionServiceImpl implements SubscriptionService {
         if (subscriptions.length === 0) {
             console.log('subscriptions not found')
             return []
-        }    
+        }
 
         console.log('Loading images for subscriptions')
-        const images = await Promise.all(subscriptions.map(s => getObjById("community-profile-images-1r34goy", s.previewImageId)));
+
+
+        const images = await Promise.all(subscriptions.map(s => {
+            return subscriptionResourceRepository.getImage(s.previewImageId)
+        }));
 
         return subscriptions.map(s => {
             return {
@@ -56,10 +64,23 @@ export class SubscriptionServiceImpl implements SubscriptionService {
                 previewImageId: undefined,
                 previewImage: {
                     id: s.previewImageId,
-                    base64Image: s3DataToBase64String(images.find(i => i.id === s.previewImageId).data)
+                    base64Image: images.find(i => i.id === s.previewImageId).base64Data
                 }
             }
         })
+    }
+
+    async getImage(id: string): Promise<Image> {
+        return subscriptionResourceRepository.getImage(id);
+    }
+
+    async saveImage(base64Image: string): Promise<string> {
+        return subscriptionResourceRepository.save(base64Image);
+    }
+    
+    async uploadImage(id: string, base64Image: string): Promise<string> {
+        await subscriptionResourceRepository.update(id, base64Image);
+        return id;
     }
 }
 
