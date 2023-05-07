@@ -1,34 +1,65 @@
-import { ProfileTableName } from "@/common"
-import { OperationStatus, putItem } from "@/db/db"
+import { documentClient } from "@/db/dynamo"
+import { GetCommand, GetCommandInput, PutCommand, PutCommandInput } from "@aws-sdk/lib-dynamodb"
+import { marshall, unmarshall } from "@aws-sdk/util-dynamodb"
 
-// TODO define profile model and refactor
-export class ProfileDO {
-    constructor(
-        readonly id: string
-    ) {}
+
+export interface ProfileDO {
+    id: string,
+    description: string,
+    instant: string,
+    logoId: string,
+    socialMediaLinks: string[],
+    title: string
 }
 
 export interface ProfileRepository {
 
-    putProfile(profile: any): Promise<OperationStatus>
+    getById(id: string): Promise<ProfileDO>
 
-    save(profile: ProfileDO): Promise<OperationStatus>
+    put(profile: ProfileDO): Promise<void>
+
 }
 
 export class ProfileRepositoryImpl implements ProfileRepository {
 
-    async putProfile(profile: any): Promise<OperationStatus> {
-        return putItem({
-            TableName: ProfileTableName,
-            Item: profile
-        })
+    private table = 'Community-profile';
+
+    async getById(id: string): Promise<ProfileDO> {
+
+        console.log(`Start get profile ${id}`);
+
+        const input: GetCommandInput = {
+            TableName: this.table,
+            Key: marshall({
+                "id": id
+            })
+        }
+
+        const command: GetCommand = new GetCommand(input);
+
+        const result = await documentClient.send(command);
+
+        const profile = unmarshall(result.Item) as ProfileDO;
+
+        console.log(`Got frofile ${profile}`);
+
+        return profile;
     }
 
-    async save(profile: ProfileDO): Promise<OperationStatus> {
-        return putItem({
-            TableName: ProfileTableName,
-            Item: profile
-        })
+    async put(profile: ProfileDO): Promise<void> {
+
+        console.log(`Start save profile ${profile}`);
+        
+        const input: PutCommandInput = {
+            TableName: this.table,
+            Item: marshall(profile)
+        };
+
+        const command: PutCommand = new PutCommand(input);
+
+        await documentClient.send(command);
+
+        console.log(`Profile saved ${profile}`);
     }
 }
 

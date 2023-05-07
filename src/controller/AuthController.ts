@@ -38,9 +38,6 @@ export class AuthControllerImpl implements AuthController {
 
     async signIn(req: Request, res: Response): Promise<void> {
         try {
-            console.log('signIn request');
-            console.log(req);
-            console.log(req.apiGateway.event.headers);
             const {message, signature} = req.body as SignInBody;
             if (!message) {
                 res.status(422).json({message: 'Expected signMessage object as body.'});
@@ -50,12 +47,6 @@ export class AuthControllerImpl implements AuthController {
             const siweMessage = new SiweMessage(message);
 
             const {data: fields} = await siweMessage.verify({signature, nonce: req.session.nonce});
-
-            console.log('fields');
-            console.log(fields);
-            console.log('session');
-            console.log(req.session.nonce);
-            console.log(req.session);
 
             if (fields.nonce !== req.session.nonce) {
                 res.status(422).json({message: 'Invalid nonce.'});

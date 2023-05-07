@@ -6,6 +6,38 @@ import {OperationStatus, loadByNId, putItem, loadBySId} from "@/db/db";
 import {subscriptionService, SubscriptionService} from "@/subscription/subscription-service";
 import {toSuccessResponse, toErrorResponse, ProfileTableName} from "@/common";
 import * as console from "console";
+import { SubscriptionStatus } from "@/subscription/subscription-repository";
+
+
+export interface ImageDto {
+    id: string | undefined,
+    base64Image: string | undefined,
+}
+
+export interface ProfileDTO {
+    id: string;
+    title: string;
+    description: string;
+    logo: ImageDto,
+    socialMediaLinks: string[];
+    subscriptions: BriefSubscriptionInfo[],
+}
+
+export interface UpdateProfileRequestDTO {
+    id: string;
+    title: string;
+    description: string;
+    logo: ImageDto,
+    socialMediaLinks: string[];
+}
+
+export interface BriefSubscriptionInfo {
+    id: string;
+    status: SubscriptionStatus,
+    ownerId: string;
+    title: string;
+    previewImage: ImageDto,
+}
 
 export interface ProfileController {
     update(req: Request, res: Response, next: NextFunction): Promise<void>

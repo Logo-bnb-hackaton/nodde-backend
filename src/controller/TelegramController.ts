@@ -1,26 +1,26 @@
 import { toErrorResponse, toSuccessResponse } from "@/common";
 import { getJsonFromLambdaResponse, invokeLambda } from "@/lambda/wrap";
-import { NextFunction, Request, Response } from "express";
+import { Request, Response } from "express";
 
 export interface TelegramController {
-    getInviteLink(req: Request, res: Response, next: NextFunction): Promise<void>
-    generateInviteLink(req: Request, res: Response, next: NextFunction): Promise<void>
-    bindChat(req: Request, res: Response, next: NextFunction): Promise<void>
-    getChatBindingStatus(req: Request, res: Response, next: NextFunction): Promise<void>
+    getInviteLinkStatus(req: Request, res: Response): Promise<void>
+    generateInviteCode(req: Request, res: Response): Promise<void>
+    bindChat(req: Request, res: Response): Promise<void>
+    getChatBindingStatus(req: Request, res: Response): Promise<void>
 }
 
 export const X_API_WALLET_ADDRESS_HEADER = "x-api-wallet-address"
 
 export class TelegramControllerImpl implements TelegramController {
 
-    async getInviteLink(req: Request, res: Response, next: NextFunction): Promise<void> {
+    async getInviteLinkStatus(req: Request, res: Response): Promise<void> {
         try {
             const body = JSON.parse(Buffer.from(req.body).toString())
             const address = req.headers[X_API_WALLET_ADDRESS_HEADER]
             const { content_id } = body
-            const invocationResult = await invokeLambda("getInviteCode", {
+            const invocationResult = await invokeLambda("getInviteLinkStatus", {
                 address: address,
-                content_id: content_id
+                subscription_id: content_id
             })
             if (200 === invocationResult.StatusCode) {
                 res
@@ -36,18 +36,17 @@ export class TelegramControllerImpl implements TelegramController {
                     .send(toErrorResponse("Something went wrong"))
                     .status(500)
             }
-            next()
         } catch (error) {
             console.error(error)
         }
     }
 
-    async generateInviteLink(req: Request, res: Response, next: NextFunction): Promise<void> {
+    async generateInviteCode(req: Request, res: Response): Promise<void> {
         try {
             const body = JSON.parse(Buffer.from(req.body).toString())
             const address = req.headers[X_API_WALLET_ADDRESS_HEADER]
             const { content_id, author } = body
-            const invocationResult = await invokeLambda("prepareInvite", {
+            const invocationResult = await invokeLambda("generateInviteCode", {
                 address: address,
                 content_id: content_id,
                 author: author
@@ -66,14 +65,13 @@ export class TelegramControllerImpl implements TelegramController {
                     .send(toErrorResponse("Something went wrong"))
                     .status(500)
             }
-            next()
         } catch (error) {
             console.error(error)
         }
     }
 
 
-    async bindChat(req: Request, res: Response, next: NextFunction): Promise<void> {
+    async bindChat(req: Request, res: Response): Promise<void> {
         try {
             const body = JSON.parse(Buffer.from(req.body).toString())
             const address = req.headers[X_API_WALLET_ADDRESS_HEADER]
@@ -97,7 +95,6 @@ export class TelegramControllerImpl implements TelegramController {
                     .send(toErrorResponse("Something went wrong"))
                     .status(500)
             }
-            next()
         } catch (error) {
             console.error(error)
             res
@@ -106,7 +103,7 @@ export class TelegramControllerImpl implements TelegramController {
         }
     }
 
-    async getChatBindingStatus(req: Request, res: Response, next: NextFunction): Promise<void> {
+    async getChatBindingStatus(req: Request, res: Response): Promise<void> {
         try {
             const body = JSON.parse(Buffer.from(req.body).toString())
             const { content_id, author_id } = body;
@@ -129,7 +126,7 @@ export class TelegramControllerImpl implements TelegramController {
                 res
                     .send(toErrorResponse("Something went wrong"))
             }     
-            next()
+
         } catch (error) {
             console.error(error)
             res

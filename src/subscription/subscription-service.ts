@@ -1,13 +1,27 @@
 import { scanTable } from "../db/db";
 import { getObjById, s3DataToBase64String } from "../s3/image";
-import { SubscriptionRepository, subscriptionRepository } from "./subscription-repository";
+import { SubscriptionDO, SubscriptionRepository, subscriptionRepository } from "./subscription-repository";
+
+
 
 export interface SubscriptionService {
+    getById(id: string): Promise<SubscriptionDO>
+    put(subscription: SubscriptionDO): Promise<void>
     loadBriefSubscription(profileId: string): Promise<any[]>
 }
 
 export class SubscriptionServiceImpl implements SubscriptionService {
     constructor(readonly subscriptionRepository: SubscriptionRepository) {}
+
+    
+    getById(id: string): Promise<SubscriptionDO> {
+        return subscriptionRepository.getById(id);
+    }    
+
+    put(subscription: SubscriptionDO): Promise<void> {
+        return subscriptionRepository.put(subscription);
+    }
+    
     
     async loadBriefSubscription(profileId: string): Promise<any[]> {
         console.log(`Loading brief subscription info for profile ${profileId}`)
