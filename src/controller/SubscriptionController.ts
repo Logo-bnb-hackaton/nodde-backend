@@ -113,7 +113,7 @@ export class SubscriptionControllerImpl implements SubscriptionController {
                     status: "error",
                     errorMessage: "subId is null"
                 });
-                return
+                return;
             }
 
             const oldSubscription = await subscriptionService.getById(subscriptionId);

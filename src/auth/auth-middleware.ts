@@ -2,8 +2,7 @@ import {Request, Response, NextFunction} from "express";
 
 export class AuthMiddleware {
 
-    constructor() {
-    }
+    constructor() {}
 
     async authorizeWallet(req: Request, res: Response, next: NextFunction) {
 
@@ -17,5 +16,5 @@ export class AuthMiddleware {
     }
 }
 
-const authMiddleware = new AuthMiddleware()
+const authMiddleware = new AuthMiddleware();
 export {authMiddleware}

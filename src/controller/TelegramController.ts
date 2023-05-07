@@ -3,10 +3,15 @@ import { getJsonFromLambdaResponse, invokeLambda } from "@/lambda/wrap";
 import { Request, Response } from "express";
 
 export interface TelegramController {
+
     getInviteLinkStatus(req: Request, res: Response): Promise<void>
+
     generateInviteCode(req: Request, res: Response): Promise<void>
+
     bindChat(req: Request, res: Response): Promise<void>
+
     getChatBindingStatus(req: Request, res: Response): Promise<void>
+    
 }
 
 export const X_API_WALLET_ADDRESS_HEADER = "x-api-wallet-address"

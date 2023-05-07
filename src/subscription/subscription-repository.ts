@@ -20,9 +20,11 @@ export interface SubscriptionDO {
 export type SubscriptionStatus = 'DRAFT' | 'UNPUBLISHED' | 'PUBLISHED';
 
 export interface SubscriptionRepository {
+
     getById(id: string): Promise<SubscriptionDO>
 
     put(subscription: SubscriptionDO): Promise<void>
+    
 }
 
 export const SubscriptionTableName = "Community-subscription";

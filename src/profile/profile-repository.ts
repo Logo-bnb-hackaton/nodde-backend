@@ -1,6 +1,5 @@
-import {documentClient} from "@/db/dynamo"
-import {marshall, unmarshall} from "@aws-sdk/util-dynamodb"
-import * as console from "console";
+import {documentClient} from "@/db/dynamo";
+import {marshall, unmarshall} from "@aws-sdk/util-dynamodb";
 import {GetItemCommand, PutItemCommand, PutItemCommandInput} from "@aws-sdk/client-dynamodb";
 import {GetItemCommandInput} from "@aws-sdk/client-dynamodb/dist-types/commands/GetItemCommand";
 

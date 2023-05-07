@@ -1,8 +1,8 @@
 import { ImageDto } from "@/controller/ProfileController";
 import { scanTable } from "../db/db";
-import { SubscriptionDO, SubscriptionRepository, SubscriptionStatus, subscriptionRepository } from "./subscription-repository";
+import { SubscriptionDO, SubscriptionStatus, subscriptionRepository } from "./subscription-repository";
 import { subscriptionResourceRepository } from "./subscription-resource-repository";
-import { Image } from "@/profile/profile-resource-repository";
+import { Image } from "@/s3/image";
 
 export interface BriefSubscriptionInfo {
     id: string;
@@ -22,8 +22,6 @@ export interface SubscriptionService {
 }
 
 export class SubscriptionServiceImpl implements SubscriptionService {
-
-    constructor(readonly subscriptionRepository: SubscriptionRepository) { }
 
     getById(id: string): Promise<SubscriptionDO> {
         return subscriptionRepository.getById(id);
@@ -77,12 +75,12 @@ export class SubscriptionServiceImpl implements SubscriptionService {
     async saveImage(base64Image: string): Promise<string> {
         return subscriptionResourceRepository.save(base64Image);
     }
-    
+
     async uploadImage(id: string, base64Image: string): Promise<string> {
         await subscriptionResourceRepository.update(id, base64Image);
         return id;
     }
 }
 
-const subscriptionService: SubscriptionService = new SubscriptionServiceImpl(subscriptionRepository)
+const subscriptionService: SubscriptionService = new SubscriptionServiceImpl();
 export { subscriptionService }
