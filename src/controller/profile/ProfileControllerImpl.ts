@@ -6,7 +6,7 @@ import { profileService } from "@/profile/service/ProfileServiceImpl";
 import { ProfileDO } from "@/profile/repository/ProfileDO";
 import { GetProfileRequest } from "./GetProfileRequest";
 import { toErrorResponse, toSuccessResponse } from "@/common";
-import { subscriptionService } from "@/subscription/subscription-service";
+import { subscriptionService } from "@/subscription/service/subscription-service";
 import { GetProfileResponse } from "./GetProfileResponse";
 
 export class ProfileControllerImpl implements ProfileController {

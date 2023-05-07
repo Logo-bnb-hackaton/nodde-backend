@@ -1,9 +1,9 @@
 import { Request, Response } from "express"
 import { toErrorResponse, toSuccessResponse } from "@/common";
-import { SubscriptionDO, SubscriptionStatus } from "@/subscription/subscription-repository";
+import { SubscriptionDO, SubscriptionStatus } from "@/subscription/repository/subscription-repository";
 import { ImageDto } from "../profile/ProfileController";
-import { subscriptionService } from "@/subscription/subscription-service";
-import { subscriptionResourceRepository } from "@/subscription/subscription-resource-repository";
+import { subscriptionService } from "@/subscription/service/subscription-service";
+import { subscriptionResourceRepository } from "@/subscription/resource/subscription-resource-repository";
 import { apiResponse, unknownApiError } from "@/api/ApiResponse";
 
 export interface GetSubscriptionDescriptionRequest {

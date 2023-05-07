@@ -50,13 +50,6 @@ app.use(Session({
     }
 }));
 
-app.get('/', (_: Request, res: Response) => {
-    res.send({
-        status: "ok"
-    });
-});
-
-
 app.get('/api/nonce', authController.getNonce);
 
 app.post('/api/sign_in', authController.signIn);

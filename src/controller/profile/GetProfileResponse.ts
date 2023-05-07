@@ -1,4 +1,4 @@
-import { BriefSubscriptionInfo } from "@/subscription/subscription-service";
+import { BriefSubscriptionInfo } from "@/subscription/service/subscription-service";
 import { ImageDto } from "./ImageDto";
 
 export interface GetProfileResponse {
