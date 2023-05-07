@@ -1,13 +1,13 @@
 import express, { Express, Request, Response, json } from 'express';
 import { authMiddleware } from './auth/auth-middleware';
-import { authController } from './controller/AuthController';
-import { profileController } from './controller/ProfileController';
-import { subscriptionController } from './controller/SubscriptionController';
+import { authController } from './controller/auth/AuthController';
+import { subscriptionController } from './controller/subscription/SubscriptionController';
 import dotenv from 'dotenv';
-import { telegramController } from './controller/TelegramController';
+import { telegramController } from './controller/telegram/TelegramController';
 import { SiweMessage } from 'siwe';
 import Session from 'express-session';
 import { SessionStore } from './store/SessionStore';
+import { profileController } from './controller/profile/ProfileControllerImpl';
 
 const cors = require('cors');
 
