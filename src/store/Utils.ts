@@ -31,6 +31,7 @@ export function toSecondsEpoch (date: Date) {
    * @param {number} expiresOn Optiona expiration date on second epoch.
    */
   export function isExpired (expiresOn: number) {
+    console.log(`isExpired: expiresOn=${expiresOn}, now=${toSecondsEpoch(new Date())}`);
     return !expiresOn || expiresOn <= toSecondsEpoch(new Date())
   }
   

@@ -1,6 +1,6 @@
-import { SessionData, Store } from 'express-session'
-import { documentClient } from '@/db/dynamo'
-import { DynamoDBDocumentClient, PutCommand, GetCommand, DeleteCommand, UpdateCommand } from "@aws-sdk/lib-dynamodb"
+import {SessionData, Store} from 'express-session'
+import {documentClient} from '@/db/dynamo'
+import {DynamoDBDocumentClient} from "@aws-sdk/lib-dynamodb"
 
 import {
     DEFAULT_HASH_KEY,
@@ -10,7 +10,17 @@ import {
     DEFAULT_TOUCH_INTERVAL,
     DEFAULT_KEEP_EXPIRED_POLICY,
 } from './Constants'
-import { toSecondsEpoch, debug, isExpired } from './Utils'
+import {toSecondsEpoch, isExpired, debug} from './Utils'
+import {
+    DeleteItemCommand,
+    DeleteItemCommandInput,
+    GetItemCommand,
+    PutItemCommand,
+    PutItemCommandInput, UpdateItemCommand, UpdateItemCommandInput
+} from "@aws-sdk/client-dynamodb";
+import {marshall, unmarshall} from "@aws-sdk/util-dynamodb";
+import {GetItemCommandInput} from "@aws-sdk/client-dynamodb/dist-types/commands/GetItemCommand";
+import * as console from "console";
 
 
 /**
@@ -65,11 +75,11 @@ export class SessionStore extends Store {
         this.ttl = ttl
         this.keepExpired = keepExpired
 
-        this.keySchema = [{ AttributeName: this.hashKey, KeyType: 'HASH' }]
-        this.attributeDefinitions = [{ AttributeName: this.hashKey, AttributeType: 'S' }]
+        this.keySchema = [{AttributeName: this.hashKey, KeyType: 'HASH'}]
+        this.attributeDefinitions = [{AttributeName: this.hashKey, AttributeType: 'S'}]
         if (this.sortKey) {
-            this.keySchema.push({ AttributeName: this.sortKey, KeyType: 'RANGE' })
-            this.attributeDefinitions.push({ AttributeName: this.sortKey, AttributeType: 'S' })
+            this.keySchema.push({AttributeName: this.sortKey, KeyType: 'RANGE'})
+            this.attributeDefinitions.push({AttributeName: this.sortKey, AttributeType: 'S'})
         }
 
         console.info(this)
@@ -86,27 +96,34 @@ export class SessionStore extends Store {
         try {
             const sessionId = this.getSessionId(sid)
             const expires = this.getExpirationDate(session)
-            const params = {
-                TableName: this.tableName,
-                Item: {
-                    [this.hashKey]: sessionId,
-                    [this.sortKey]: sessionId,
-                    expires: toSecondsEpoch(expires),
-                    sess: {
-                        ...session,
-                        updated: Date.now()
-                    }
-                }
-            }
-            debug(`Saving session '${sid}'`, session)
 
-            this.documentClient.send(new PutCommand(params)).then(callback)
+            let item = marshall({
+                pk: sessionId,
+                sk: sessionId,
+                expires: toSecondsEpoch(expires),
+                sess: {
+                    ...session,
+                    updated: Date.now()
+                }
+            }, {
+                removeUndefinedValues: true,
+                convertClassInstanceToMap: true
+            });
+
+            console.log('Item');
+            console.log(item);
+            const params: PutItemCommandInput = {
+                TableName: this.tableName,
+                Item: item
+            }
+            console.log(`Saving session '${sid}'`, session)
+
+            this.documentClient.send(new PutItemCommand(params)).then(callback)
         } catch (err) {
 
-            console.error('sadfsadfasdf')
             console.error(err)
 
-            debug('Error saving session', {
+            console.log('Error saving session', {
                 sid,
                 session,
                 err
@@ -123,29 +140,32 @@ export class SessionStore extends Store {
     async get(sid: string, callback: (err: any, session?: SessionData | null) => void): Promise<void> {
         try {
             const sessionId = this.getSessionId(sid)
-            const params = {
+            const params: GetItemCommandInput = {
                 TableName: this.tableName,
-                Key: {
+                Key: marshall({
                     [this.hashKey]: sessionId,
                     [this.sortKey]: sessionId
-                },
+                }),
                 ConsistentRead: true
             }
             console.log(params)
 
-            const { Item: record } = await this.documentClient.send(new GetCommand(params))
+            const result = await this.documentClient.send(new GetItemCommand(params))
 
-            if (!record) {
-                debug(`Session '${sid}' not found`)
-                callback(null, null)
-            } else if (isExpired(record.expires)) {
-                this.handleExpiredSession(sid, callback)
+            if (result.Item) {
+                const record = unmarshall(result.Item);
+                if (isExpired(record.expires)) {
+                    await this.handleExpiredSession(sid, callback)
+                } else {
+                    console.log(`Session '${sid}' found`, record.sess)
+                    callback(null, record.sess)
+                }
             } else {
-                debug(`Session '${sid}' found`, record.sess)
-                callback(null, record.sess)
+                console.log(`Session '${sid}' not found`);
+                callback(null, null);
             }
         } catch (err) {
-            debug(`Error getting session '${sid}'`, err)
+            console.log(`Error getting session '${sid}'`, err)
             callback(err)
         }
     }
@@ -158,20 +178,18 @@ export class SessionStore extends Store {
     async destroy(sid: string, callback?: (err?: any) => void): Promise<void> {
         try {
             const sessionId = this.getSessionId(sid)
-            const params = {
+            const params: DeleteItemCommandInput = {
                 TableName: this.tableName,
-                Key: {
+                Key: marshall({
                     [this.hashKey]: sessionId,
                     [this.sortKey]: sessionId
-                }
+                })
             }
-            await this.documentClient.send(new DeleteCommand(
-                params
-            ))
-            debug(`Destroyed session '${sid}'`)
+            await this.documentClient.send(new DeleteItemCommand(params));
+            console.log(`Destroyed session '${sid}'`)
             callback(null)
         } catch (err) {
-            debug(`Error destroying session '${sid}'`, err)
+            console.log(`Error destroying session '${sid}'`, err)
             callback(err)
         }
     }
@@ -187,31 +205,31 @@ export class SessionStore extends Store {
             if (!session.updated || Number(session.updated) + this.touchInterval <= Date.now()) {
                 const sessionId = this.getSessionId(sid)
                 const expires = this.getExpirationDate(session)
-                const params = {
+                const params: UpdateItemCommandInput = {
                     TableName: this.tableName,
-                    Key: {
+                    Key: marshall({
                         [this.hashKey]: sessionId,
                         [this.sortKey]: sessionId
-                    },
+                    }),
 
                     UpdateExpression: 'set expires = :e, sess.#up = :n',
                     ExpressionAttributeNames: {
                         '#up': 'updated'
                     },
-                    ExpressionAttributeValues: {
+                    ExpressionAttributeValues: marshall({
                         ':e': toSecondsEpoch(expires),
                         ':n': Date.now()
-                    },
+                    }),
                     ReturnValues: 'UPDATED_NEW'
                 }
-                debug(`Touching session '${sid}'`)
-                this.documentClient.send(new UpdateCommand(params)).then(callback)
+                console.log(`Touching session '${sid}'`)
+                this.documentClient.send(new UpdateItemCommand(params)).then(callback)
             } else {
-                debug(`Skipping touch of session '${sid}'`)
+                console.log(`Skipping touch of session '${sid}'`)
                 callback()
             }
         } catch (err) {
-            debug(`Error touching session '${sid}'`, err)
+            console.log(`Error touching session '${sid}'`, err)
             callback()
         }
     }
@@ -222,11 +240,11 @@ export class SessionStore extends Store {
      * @param  {Function} callback Callback to be invoked at the end of the execution.
      */
     async handleExpiredSession(sid: string, callback: (obj: any) => any) {
-        debug(`Found session '${sid}' but it is expired`)
+        console.log(`Found session '${sid}' but it is expired`)
         if (this.keepExpired) {
             callback(null)
         } else {
-            this.destroy(sid, callback)
+            await this.destroy(sid, callback)
         }
     }
 
