@@ -1,4 +1,4 @@
-import express, {Express, json, Request, Response} from 'express';
+import express, {Express, json} from 'express';
 import { authMiddleware } from './auth/auth-middleware';
 import { authController } from './controller/auth/AuthController';
 import { subscriptionController } from './controller/subscription/SubscriptionController';
@@ -8,7 +8,6 @@ import { SiweMessage } from 'siwe';
 import Session from 'express-session';
 import { SessionStore } from './store/SessionStore';
 import { profileController } from './controller/profile/ProfileControllerImpl';
-import {subscriptionContractService} from "@/subscription/service/contract/SubscriptionContractServiceImpl";
 
 const cors = require('cors');
 
