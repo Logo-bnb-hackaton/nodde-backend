@@ -25,6 +25,7 @@ export class ProfileRepositoryImpl implements ProfileRepository {
         const result = await documentClient.send(new QueryCommand(input));
 
         if (!result.Items || result.Items.length === 0) {
+            console.warn(`No items found for address ${address}`);
             return undefined;
         }
 
