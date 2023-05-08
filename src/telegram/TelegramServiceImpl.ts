@@ -5,7 +5,7 @@ import {InvokeCommandOutput} from "@aws-sdk/client-lambda";
 class TelegramServiceImpl implements TelegramService {
 
     async bindChat(code: string, address: string, subscriptionId: string): Promise<InvokeCommandOutput> {
-        return invokeLambda("bindChat", {
+        return invokeLambda("telegram-lambdas-dev-bindChat", {
             code: code,
             address: address,
             subscription_id: subscriptionId
@@ -13,21 +13,21 @@ class TelegramServiceImpl implements TelegramService {
     }
 
     async getInviteLinkStatus(address: string, subscriptionId: string): Promise<InvokeCommandOutput> {
-        return invokeLambda("getInviteLinkStatus", {
+        return invokeLambda("telegram-lambdas-dev-getInviteLinkStatus", {
             address: address,
             subscription_id: subscriptionId
         });
     }
 
     async generateInviteCode(address: string, subscriptionId: string): Promise<InvokeCommandOutput> {
-        return invokeLambda("generateInviteCode", {
+        return invokeLambda("telegram-lambdas-dev-generateInviteCode", {
                 address: address,
                 subscription_id: subscriptionId
         })
     }
 
     async getChatBindingStatus(address: string, subscriptionId: string): Promise<InvokeCommandOutput> {
-        return invokeLambda("getChatBindingStatus", {
+        return invokeLambda("telegram-lambdas-dev-getChatBindingStatus", {
             address: address,
             subscription_id: subscriptionId
         })

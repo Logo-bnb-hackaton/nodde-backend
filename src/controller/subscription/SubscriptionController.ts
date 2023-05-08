@@ -1,9 +1,9 @@
-import { Request, Response } from "express"
-import { toErrorResponse, toSuccessResponse } from "@/common";
-import { SubscriptionDO, SubscriptionStatus } from "@/subscription/repository/subscription-repository";
-import { subscriptionService } from "@/subscription/service/subscription-service";
-import { subscriptionResourceRepository } from "@/subscription/resource/subscription-resource-repository";
-import { apiResponse, unknownApiError } from "@/api/ApiResponse";
+import {Request, Response} from "express"
+import {toErrorResponse, toSuccessResponse} from "@/common";
+import {SubscriptionDO, SubscriptionStatus} from "@/subscription/repository/subscription-repository";
+import {subscriptionService} from "@/subscription/service/subscription-service";
+import {subscriptionResourceRepository} from "@/subscription/resource/subscription-resource-repository";
+import {apiResponse, unknownApiError} from "@/api/ApiResponse";
 import {ImageDto} from "@/controller/profile/ImageDto";
 
 export interface GetSubscriptionDescriptionRequest {
@@ -35,12 +35,18 @@ export interface UpdateSubscriptionDTO {
     coin: string;
 }
 
+export interface UpdateSubscriptionStatusDTO {
+    id: string,
+    status: SubscriptionStatus
+}
+
 export interface SubscriptionController {
 
     getSubscriptionDescription(req: Request, res: Response): Promise<void>
 
     update(req: Request, res: Response): Promise<void>
 
+    updateStatus(req: Request, res: Response): Promise<void>
 }
 
 export class SubscriptionControllerImpl implements SubscriptionController {
@@ -124,11 +130,12 @@ export class SubscriptionControllerImpl implements SubscriptionController {
                     .status(404)
             }
 
-            const mainImageS3Id = await subscriptionService.uploadImage(oldSubscription.id, updateSubscriptionRequest.mainImage.base64Image);
+            const mainImageS3Id = await subscriptionService.uploadImage(oldSubscription.mainImageId, updateSubscriptionRequest.mainImage.base64Image);
             const previewImgS3Id = await subscriptionService.uploadImage(oldSubscription.previewImageId, updateSubscriptionRequest.previewImage.base64Image);
 
             const subscriptionForUpdate: SubscriptionDO = {
                 id: subscriptionId,
+                subscriptionId: '123', // todo fix it later
                 ownerId: updateSubscriptionRequest.ownerId,
                 status: updateSubscriptionRequest.status,
                 title: updateSubscriptionRequest.title,
@@ -142,13 +149,55 @@ export class SubscriptionControllerImpl implements SubscriptionController {
 
             await subscriptionService.put(subscriptionForUpdate)
 
-            res.json(apiResponse({ status: 'success' }));
+            res.json(apiResponse({status: 'success'}));
         } catch (err) {
             console.error(err);
             res.json(unknownApiError).status(500);
         }
     }
+
+    // todo fix it later
+    async updateStatus(req: Request, res: Response): Promise<void> {
+        try {
+            const updateSubscriptionRequest = req.body as UpdateSubscriptionStatusDTO;
+            const subscriptionId = updateSubscriptionRequest.id;
+            if (!subscriptionId) {
+                console.log("id is null");
+                res.send({
+                    status: "error",
+                    errorMessage: "subId is null"
+                });
+                return;
+            }
+
+            const oldSubscription = await subscriptionService.getById(subscriptionId);
+            if (!oldSubscription) {
+                res
+                    .json({
+                        error: {
+                            code: 'not_found',
+                            message: 'Subscription not found'
+                        }
+                    })
+                    .status(404)
+            }
+
+            const subscriptionForUpdate: SubscriptionDO = {
+                ...oldSubscription,
+                status: updateSubscriptionRequest.status,
+            }
+
+            await subscriptionService.put(subscriptionForUpdate);
+
+            res.json(apiResponse({status: 'success'}));
+        } catch (err) {
+            console.error(err);
+            res.json(unknownApiError).status(500);
+        }
+    }
+
+
 }
 
 const subscriptionController: SubscriptionController = new SubscriptionControllerImpl()
-export { subscriptionController }
+export {subscriptionController}

@@ -23,10 +23,10 @@ declare module 'express-session' {
 }
 
 const app: Express = express();
-app.use(json());
+// todo fix it later
+app.use(json({limit: "5mb"}));
 app.use(cors({
     origin: ['http://localhost:3000'],
-    // methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     credentials: true,
 
 }));
@@ -64,6 +64,8 @@ app.post('/profile/update', authMiddleware.authorizeWallet, profileController.up
 app.post('/profile/', authMiddleware.authorizeWallet, profileController.profile);
 
 app.post('/subscription/update', authMiddleware.authorizeWallet, subscriptionController.update);
+
+app.post('/subscription/update-status', authMiddleware.authorizeWallet, subscriptionController.updateStatus);
 
 app.post('/subscription/', authMiddleware.authorizeWallet, subscriptionController.getSubscriptionDescription);
 

@@ -59,7 +59,6 @@ export class TelegramControllerImpl implements TelegramController {
     async bindChat(req: Request, res: Response): Promise<void> {
 
         try {
-
             const { code, subscriptionId } = req.body as BindChatRequest;
             const address = req.session.siwe.address;
             const serviceResponse = await telegramService.bindChat(code, address, subscriptionId);
