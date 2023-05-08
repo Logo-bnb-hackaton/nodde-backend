@@ -23,6 +23,7 @@ provider:
     cors:
       allowedOrigins:
         - 'http://localhost:3000'
+        - 'https://community-front-henna.vercel.app'
       allowedHeaders:
         - Content-Type
       allowCredentials: true
