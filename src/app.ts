@@ -64,6 +64,8 @@ app.post('/profile/', authMiddleware.authorizeWallet, profileController.profile)
 
 app.post('/subscription/update', authMiddleware.authorizeWallet, subscriptionController.update);
 
+app.post('/subscription/update-status', authMiddleware.authorizeWallet, subscriptionController.updateStatus);
+
 app.post('/subscription/', authMiddleware.authorizeWallet, subscriptionController.getSubscriptionDescription);
 
 app.get('/telegram/get-invite-link-status', authMiddleware.authorizeWallet, telegramController.getInviteLinkStatus);
