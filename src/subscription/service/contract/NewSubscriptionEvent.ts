@@ -1,5 +1,6 @@
 
 export interface NewSubscriptionEvent {
+    hexId: string,
     participant: string,
     author: number,
     subscriptionId: number,

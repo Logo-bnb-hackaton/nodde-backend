@@ -7,6 +7,7 @@ import {InvokeCommandOutput} from "@aws-sdk/client-lambda";
 import {telegramService} from "@/telegram/TelegramServiceImpl";
 import {GetInviteLinkStatusRequest} from "@/controller/telegram/GetInviteLinkStatusRequest";
 import {GenerateInviteCodeRequest} from "@/controller/telegram/GenerateInviteCodeRequest";
+import * as console from "console";
 
 export interface TelegramController {
 
@@ -42,6 +43,9 @@ export class TelegramControllerImpl implements TelegramController {
 
             const {subscriptionId} = req.body as GenerateInviteCodeRequest;
             const address = req.session.siwe.address;
+
+            console.log(`Check if invite code for address ${address}  already created`);
+
             const invocationResult = await telegramService.generateInviteCode(address, subscriptionId);
             this.handleInvokeCommandOutput(res, invocationResult);
 

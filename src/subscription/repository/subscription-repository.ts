@@ -5,12 +5,18 @@ import {GetItemCommandInput} from "@aws-sdk/client-dynamodb/dist-types/commands/
 
 
 export interface SubscriptionDO {
+    /**
+     * Unique subscription identifier in hex format.
+     * This one using in blockchain as well in
+     * (hex) -> (subscriptionId: uint256, authorId: uint256) mapping
+     */
     id: string,
+    ownerId: string,
+    subscriptionId: string,
     coin: string,
     description: string,
     instant: string,
     mainImageId: string,
-    ownerId: string,
     previewImageId: string,
     price: string,
     status: SubscriptionStatus,
@@ -24,7 +30,7 @@ export interface SubscriptionRepository {
     getById(id: string): Promise<SubscriptionDO>
 
     put(subscription: SubscriptionDO): Promise<void>
-    
+
 }
 
 export const SubscriptionTableName = "Community-subscription";
