@@ -1,21 +1,8 @@
-import { Request, Response } from "express";
-import { SiweErrorType, SiweMessage, generateNonce } from "siwe";
+import {Request, Response} from "express";
+import {SiweErrorType, SiweMessage, generateNonce} from "siwe";
 import * as console from "console";
-import { unknownApiError } from "@/api/ApiResponse";
-
-interface SignInRequest {
-    message: {
-        domain: string,
-        address: string,
-        statement: string,
-        uri: string,
-        version: string,
-        chainId: number,
-        nonce: string,
-        issuedAt: string,
-    },
-    signature: string,
-}
+import {unknownApiError} from "@/api/ApiResponse";
+import {SignInRequest} from "@/controller/auth/SignInRequest";
 
 export interface AuthController {
 
@@ -28,9 +15,6 @@ export interface AuthController {
 }
 
 export class AuthControllerImpl implements AuthController {
-
-    constructor() {
-    }
 
     async getNonce(req: Request, res: Response): Promise<void> {
         try {
@@ -45,25 +29,25 @@ export class AuthControllerImpl implements AuthController {
     async signIn(req: Request, res: Response): Promise<void> {
         try {
 
-            const { message, signature } = req.body as SignInRequest;
+            const {message, signature} = req.body as SignInRequest;
             if (!message) {
-                res.status(422).json({ message: 'Expected signMessage object as body.' });
+                res.status(422).json({message: 'Expected signMessage object as body.'});
                 return;
             }
 
             const siweMessage = new SiweMessage(message);
 
-            const { data: fields } = await siweMessage.verify({ signature, nonce: req.session.nonce });
+            const {data: fields} = await siweMessage.verify({signature, nonce: req.session.nonce});
 
             if (fields.nonce !== req.session.nonce) {
-                res.status(422).json({ message: 'Invalid nonce.' });
+                res.status(422).json({message: 'Invalid nonce.'});
                 return;
             }
 
             req.session.siwe = fields;
             req.session.nonce = null;
             await req.session.save();
-            res.json({ ok: true });
+            res.json({ok: true});
         } catch (e) {
             req.session.siwe = null;
             req.session.nonce = null;
@@ -72,15 +56,15 @@ export class AuthControllerImpl implements AuthController {
             let err = e as Error
             switch (e) {
                 case SiweErrorType.EXPIRED_MESSAGE: {
-                    req.session.save(() => res.status(440).json({ message: err.message }));
+                    req.session.save(() => res.status(440).json({message: err.message}));
                     break;
                 }
                 case SiweErrorType.INVALID_SIGNATURE: {
-                    req.session.save(() => res.status(422).json({ message: err.message }));
+                    req.session.save(() => res.status(422).json({message: err.message}));
                     break;
                 }
                 default: {
-                    req.session.save(() => res.status(500).json({ message: err.message }));
+                    req.session.save(() => res.status(500).json({message: err.message}));
                     break;
                 }
             }
@@ -99,4 +83,4 @@ export class AuthControllerImpl implements AuthController {
 }
 
 const authController: AuthController = new AuthControllerImpl()
-export { authController }
+export {authController}

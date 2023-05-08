@@ -1,17 +1,56 @@
-import { Request, Response } from "express";
-import { ProfileController } from "./ProfileController";
-import { UpdateProfileRequest } from "./UpdateProfileRequest";
-import { apiError, unknownApiError } from "@/api/ApiResponse";
-import { profileService } from "@/profile/service/ProfileServiceImpl";
-import { ProfileDO } from "@/profile/repository/ProfileDO";
-import { GetProfileRequest } from "./GetProfileRequest";
-import { toErrorResponse, toSuccessResponse } from "@/common";
-import { subscriptionService } from "@/subscription/service/subscription-service";
-import { GetProfileResponse } from "./GetProfileResponse";
+import {Request, Response} from "express";
+import {ProfileController} from "./ProfileController";
+import {UpdateProfileRequest} from "./UpdateProfileRequest";
+import {apiError, unknownApiError} from "@/api/ApiResponse";
+import {profileService} from "@/profile/service/ProfileServiceImpl";
+import {ProfileDO} from "@/profile/repository/ProfileDO";
+import {GetProfileRequest} from "./GetProfileRequest";
+import {toErrorResponse, toSuccessResponse} from "@/common";
+import {subscriptionService} from "@/subscription/service/subscription-service";
+import {GetProfileResponse} from "./GetProfileResponse";
+import * as console from "console";
+import {CreateNewProfileRequest} from "@/controller/profile/CreateNewProfileRequest";
 
 export class ProfileControllerImpl implements ProfileController {
 
+    async create(req: Request, res: Response): Promise<void> {
+
+        try {
+
+            const request = req.body as CreateNewProfileRequest;
+            const address = req.session.siwe.address;
+
+            const existingProfile = await profileService.getByAddress(address);
+
+            if (existingProfile) {
+                res.json(apiError('already_exist', 'Profile for given address already exists')).status(400);
+                return;
+            }
+
+            const savedProfileLogoId = await profileService.saveImage(request.imageBase64);
+
+            const newProfile: ProfileDO = {
+                id: request.id,
+                address: address,
+                title: request.title,
+                description: request.description,
+                socialMediaLinks: request.socialMediaLinks,
+                logoId: savedProfileLogoId,
+                instant: new Date().getTime().toString(),
+            }
+
+            await profileService.save(newProfile);
+
+            res.send({status: 'success'});
+
+        } catch (err) {
+            console.log(err);
+            res.json(unknownApiError).status(500);
+        }
+    }
+
     async update(req: Request, res: Response): Promise<void> {
+
         try {
 
             const updateProfileRequest = req.body as UpdateProfileRequest;
@@ -30,10 +69,17 @@ export class ProfileControllerImpl implements ProfileController {
                 return;
             }
 
-            const updatedLogo =  await profileService.uploadImage(currentProfile?.logoId, updateProfileRequest.logo.base64Image);
+            if (currentProfile.address !== req.session.siwe.address) {
+                console.log(``);
+                res.json(apiError('unautorized', 'Unatorized request')).status(401);
+                return;
+            }
+
+            const updatedLogo = await profileService.uploadImage(currentProfile?.logoId, updateProfileRequest.logo.base64Image);
 
             const profile: ProfileDO = {
                 id: profileId,
+                address: currentProfile.address,
                 title: updateProfileRequest.title,
                 description: updateProfileRequest.description,
                 logoId: updatedLogo,
@@ -43,7 +89,8 @@ export class ProfileControllerImpl implements ProfileController {
 
             await profileService.save(profile);
 
-            res.send({ status: 'success' });
+            res.send({status: 'success'});
+
         } catch (err) {
             console.error(err);
             res.json(unknownApiError).status(500);
@@ -54,7 +101,7 @@ export class ProfileControllerImpl implements ProfileController {
 
         try {
 
-            const { profileId } = req.body as GetProfileRequest;
+            const {profileId} = req.body as GetProfileRequest;
 
             if (!profileId) {
                 console.log('Error, profileId is null.');
@@ -97,4 +144,4 @@ export class ProfileControllerImpl implements ProfileController {
 }
 
 const profileController: ProfileController = new ProfileControllerImpl();
-export { profileController }
+export {profileController}

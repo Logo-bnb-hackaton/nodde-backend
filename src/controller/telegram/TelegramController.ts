@@ -1,7 +1,12 @@
-import { unknownApiError } from "@/api/ApiResponse";
-import { toErrorResponse, toSuccessResponse } from "@/common";
-import { getJsonFromLambdaResponse, invokeLambda } from "@/lambda/wrap";
-import { Request, Response } from "express";
+import {unknownApiError} from "@/api/ApiResponse";
+import {getJsonFromLambdaResponse} from "@/lambda/wrap";
+import {Request, Response} from "express";
+import {GetChatBindingStatusRequest} from "@/controller/telegram/GetChatBindingStatusRequest";
+import {BindChatRequest} from "@/controller/telegram/BindChatRequest";
+import {InvokeCommandOutput} from "@aws-sdk/client-lambda";
+import {telegramService} from "@/telegram/TelegramServiceImpl";
+import {GetInviteLinkStatusRequest} from "@/controller/telegram/GetInviteLinkStatusRequest";
+import {GenerateInviteCodeRequest} from "@/controller/telegram/GenerateInviteCodeRequest";
 
 export interface TelegramController {
 
@@ -15,128 +20,83 @@ export interface TelegramController {
 
 }
 
-export const X_API_WALLET_ADDRESS_HEADER = "x-api-wallet-address"
-
 export class TelegramControllerImpl implements TelegramController {
 
     async getInviteLinkStatus(req: Request, res: Response): Promise<void> {
+
         try {
-            const body = JSON.parse(Buffer.from(req.body).toString())
-            const address = req.headers[X_API_WALLET_ADDRESS_HEADER]
-            const { content_id } = body
-            const invocationResult = await invokeLambda("getInviteLinkStatus", {
-                address: address,
-                subscription_id: content_id
-            })
-            if (200 === invocationResult.StatusCode) {
-                res
-                    .send(toSuccessResponse(getJsonFromLambdaResponse(invocationResult)))
-                    .status(200)
-            } else if (invocationResult.StatusCode?.toString().startsWith("4")) {
-                console.log(`Payload ${getJsonFromLambdaResponse(invocationResult)}`)
-                res
-                    .send(toErrorResponse("Bad request"))
-                    .status(invocationResult.StatusCode!)
-            } else {
-                res.json(unknownApiError).status(500)
-            }
+
+            const {subscriptionId} = req.body as GetInviteLinkStatusRequest;
+            const address = req.session.siwe.address;
+            const serviceResponse = await telegramService.getInviteLinkStatus(address, subscriptionId);
+            this.handleInvokeCommandOutput(res, serviceResponse);
+
         } catch (error) {
             console.error(error)
         }
     }
 
     async generateInviteCode(req: Request, res: Response): Promise<void> {
+
         try {
-            const body = JSON.parse(Buffer.from(req.body).toString())
-            const address = req.headers[X_API_WALLET_ADDRESS_HEADER]
-            const { content_id, author } = body
-            const invocationResult = await invokeLambda("generateInviteCode", {
-                address: address,
-                content_id: content_id,
-                author: author
-            })
-            if (200 === invocationResult.StatusCode) {
-                res
-                    .send(toSuccessResponse(getJsonFromLambdaResponse(invocationResult)))
-                    .status(200)
-            } else if (invocationResult.StatusCode?.toString().startsWith("4")) {
-                console.log(`Payload ${invocationResult.Payload}`)
-                res
-                    .send(toErrorResponse("Bad request"))
-                    .status(invocationResult.StatusCode!)
-            } else {
-                res.json(unknownApiError).status(500)
-            }
+
+            const {subscriptionId} = req.body as GenerateInviteCodeRequest;
+            const address = req.session.siwe.address;
+            const invocationResult = await telegramService.generateInviteCode(address, subscriptionId);
+            this.handleInvokeCommandOutput(res, invocationResult);
+
         } catch (error) {
-            console.error(error)
+            console.error(error);
+            res.json(unknownApiError).status(500);
         }
     }
 
 
     async bindChat(req: Request, res: Response): Promise<void> {
+
         try {
-            const body = JSON.parse(Buffer.from(req.body).toString())
-            const address = req.headers[X_API_WALLET_ADDRESS_HEADER]
-            const { code, content_id } = body
-            const invocationResult = await invokeLambda("bindChat", {
-                address: address,
-                code: code,
-                content_id: content_id
-            })
-            if (200 === invocationResult.StatusCode) {
-                res
-                    .send(toSuccessResponse(getJsonFromLambdaResponse(invocationResult)))
-                    .status(200)
-            } else if (invocationResult.StatusCode?.toString().startsWith("4")) {
-                console.log(`Payload ${getJsonFromLambdaResponse(invocationResult)}`)
-                res
-                    .send(toErrorResponse("Bad request"))
-                    .status(invocationResult.StatusCode!)
-            } else {
-                res
-                    .send(toErrorResponse("Something went wrong"))
-                    .status(500)
-            }
+
+            const { code, subscriptionId } = req.body as BindChatRequest;
+            const address = req.session.siwe.address;
+            const serviceResponse = await telegramService.bindChat(code, address, subscriptionId);
+            this.handleInvokeCommandOutput(res, serviceResponse);
+
         } catch (error) {
             console.error(error)
-            res
-                .send(toErrorResponse("Bad request"))
-                .status(400) 
+            res.json(unknownApiError).status(500);
+
         }
     }
 
     async getChatBindingStatus(req: Request, res: Response): Promise<void> {
+
         try {
-            const body = JSON.parse(Buffer.from(req.body).toString())
-            const { content_id, author_id } = body;
-            const address = req.headers[X_API_WALLET_ADDRESS_HEADER]
-            const invocationResult = await invokeLambda("getChatBindingStatus", {
-                address: address,
-                author_id: author_id,
-                content_id: content_id
-            })
-            if (200 === invocationResult.StatusCode) {
-                res
-                    .send(toSuccessResponse(getJsonFromLambdaResponse(invocationResult)))
-                    .status(200)
-            } else if (invocationResult.StatusCode?.toString().startsWith("4")) {
-                console.log(`Payload ${getJsonFromLambdaResponse(invocationResult)}`)
-                res
-                    .send(toErrorResponse("Bad request"))
-                    .status(invocationResult.StatusCode!)
-            } else {
-                res
-                    .send(toErrorResponse("Something went wrong"))
-            }     
+
+            const {subscriptionId} = req.body as GetChatBindingStatusRequest;
+            const address = req.session.siwe.address;
+            const invocationResult = await telegramService.getChatBindingStatus(address, subscriptionId);
+            this.handleInvokeCommandOutput(res, invocationResult);
 
         } catch (error) {
             console.error(error)
-            res
-                .send(toErrorResponse("Bad request"))
-                .status(400) 
+            res.json(unknownApiError).status(500);
         }
+    }
+
+    handleInvokeCommandOutput(res: Response, output: InvokeCommandOutput): void {
+        let response: any;
+        let statusCode = output.StatusCode;
+
+        if (200 === output.StatusCode || output.StatusCode?.toString().startsWith("4")) {
+            response = getJsonFromLambdaResponse(output);
+        } else {
+            response = unknownApiError;
+            statusCode = 500;
+        }
+
+        res.json(response).status(statusCode);
     }
 }
 
 const telegramController: TelegramController = new TelegramControllerImpl()
-export { telegramController }
+export {telegramController}

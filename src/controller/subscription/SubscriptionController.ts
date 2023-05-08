@@ -1,10 +1,10 @@
 import { Request, Response } from "express"
 import { toErrorResponse, toSuccessResponse } from "@/common";
 import { SubscriptionDO, SubscriptionStatus } from "@/subscription/repository/subscription-repository";
-import { ImageDto } from "../profile/ProfileController";
 import { subscriptionService } from "@/subscription/service/subscription-service";
 import { subscriptionResourceRepository } from "@/subscription/resource/subscription-resource-repository";
 import { apiResponse, unknownApiError } from "@/api/ApiResponse";
+import {ImageDto} from "@/controller/profile/ImageDto";
 
 export interface GetSubscriptionDescriptionRequest {
     subscriptionId: string

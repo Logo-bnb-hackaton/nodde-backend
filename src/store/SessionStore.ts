@@ -10,7 +10,7 @@ import {
     DEFAULT_TOUCH_INTERVAL,
     DEFAULT_KEEP_EXPIRED_POLICY,
 } from './Constants'
-import {toSecondsEpoch, isExpired, debug} from './Utils'
+import {toSecondsEpoch, isExpired } from './Utils'
 import {
     DeleteItemCommand,
     DeleteItemCommandInput,
@@ -42,7 +42,7 @@ export class SessionStore extends Store {
 
     constructor(options: any = {}) {
         super()
-        debug('Initializing store', options)
+        console.log(`Initializing store ${options}`);
         this.setOptionsAsInstanceAttributes(options)
         this.documentClient = documentClient
     }
@@ -86,12 +86,6 @@ export class SessionStore extends Store {
     }
 
 
-    /**
-     * Stores a session.
-     * @param  {String}   sid      Session ID.
-     * @param  {Object}   sess     The session object.
-     * @param  {Function} callback Callback to be invoked at the end of the execution.
-     */
     set(sid: string, session: SessionData, callback?: (err?: any) => void): void {
         try {
             const sessionId = this.getSessionId(sid)
@@ -152,18 +146,20 @@ export class SessionStore extends Store {
 
             const result = await this.documentClient.send(new GetItemCommand(params))
 
-            if (result.Item) {
-                const record = unmarshall(result.Item);
-                if (isExpired(record.expires)) {
-                    await this.handleExpiredSession(sid, callback)
-                } else {
-                    console.log(`Session '${sid}' found`, record.sess)
-                    callback(null, record.sess)
-                }
-            } else {
+            if (!result.Item) {
                 console.log(`Session '${sid}' not found`);
                 callback(null, null);
+                return;
             }
+
+            const record = unmarshall(result.Item);
+            if (isExpired(record.expires)) {
+                await this.handleExpiredSession(sid, callback)
+            } else {
+                console.log(`Session '${sid}' found`, record.sess)
+                callback(null, record.sess)
+            }
+
         } catch (err) {
             console.log(`Error getting session '${sid}'`, err)
             callback(err)

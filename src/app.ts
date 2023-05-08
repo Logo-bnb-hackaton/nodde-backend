@@ -1,4 +1,4 @@
-import express, { Express, Request, Response, json } from 'express';
+import express, { Express, json } from 'express';
 import { authMiddleware } from './auth/auth-middleware';
 import { authController } from './controller/auth/AuthController';
 import { subscriptionController } from './controller/subscription/SubscriptionController';
@@ -55,6 +55,8 @@ app.get('/api/nonce', authController.getNonce);
 app.post('/api/sign_in', authController.signIn);
 
 app.post('/api/sign_out', authMiddleware.authorizeWallet, authController.signOut);
+
+app.post('/profile/create', authMiddleware.authorizeWallet, profileController.create);
 
 app.post('/profile/update', authMiddleware.authorizeWallet, profileController.update);
 

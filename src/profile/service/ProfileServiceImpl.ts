@@ -6,6 +6,10 @@ import { profileResourceRepository } from "../resource/ProfileResourceRepository
 
 export class ProfileServiceImpl implements ProfileService {
 
+    async getByAddress(address: string): Promise<ProfileDO | undefined> {
+        return profileRepository.getByAddress(address);
+    }
+
     async getById(id: string): Promise<ProfileDO|undefined> {
         return profileRepository.getById(id);
     }
