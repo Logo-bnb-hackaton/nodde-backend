@@ -74,7 +74,7 @@ app.post('/telegram/generate-invite-code', authMiddleware.authorizeWallet, teleg
 
 app.post('/telegram/bind-chat', authMiddleware.authorizeWallet, telegramController.bindChat);
 
-app.get('/telegram/get-chat-binding-status', authMiddleware.authorizeWallet, telegramController.getChatBindingStatus);
+app.post('/telegram/get-chat-binding-status', authMiddleware.authorizeWallet, telegramController.getChatBindingStatus);
 
 app.use((_, res, _2) => {
     res.status(404).json({ error: 'NOT FOUND' });

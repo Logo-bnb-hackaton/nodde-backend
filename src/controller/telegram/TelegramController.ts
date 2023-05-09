@@ -75,7 +75,8 @@ export class TelegramControllerImpl implements TelegramController {
     async getChatBindingStatus(req: Request, res: Response): Promise<void> {
 
         try {
-
+            console.log(`getChatBindingStatus`);
+            console.log(req.body);
             const {subscriptionId} = req.body as GetChatBindingStatusRequest;
             const address = req.session.siwe.address;
             const invocationResult = await telegramService.getChatBindingStatus(address, subscriptionId);
@@ -93,9 +94,7 @@ const handleInvokeCommandOutput = (res: Response, output: InvokeCommandOutput): 
     let statusCode = output.StatusCode;
 
     if (200 === output.StatusCode || output.StatusCode?.toString().startsWith("4")) {
-        const body = getJsonFromLambdaResponse(output).body;
-        console.log(`body ${body}`);
-        response = JSON.parse(body);
+        response = JSON.parse(getJsonFromLambdaResponse(output).body);
         console.log(`response ${response}`);
     } else {
         response = unknownApiError;
