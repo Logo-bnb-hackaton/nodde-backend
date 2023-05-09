@@ -1,4 +1,4 @@
-import {unknownApiError} from "@/api/ApiResponse";
+import {apiError, unknownApiError} from "@/api/ApiResponse";
 import {getJsonFromLambdaResponse} from "@/lambda/wrap";
 import {Request, Response} from "express";
 import {GetChatBindingStatusRequest} from "@/controller/telegram/GetChatBindingStatusRequest";
@@ -9,6 +9,7 @@ import {GetInviteLinkStatusRequest} from "@/controller/telegram/GetInviteLinkSta
 import {GenerateInviteCodeRequest} from "@/controller/telegram/GenerateInviteCodeRequest";
 import * as console from "console";
 import {subscriptionRepository} from "@/subscription/repository/subscription-repository";
+import {subscriptionContractService} from "@/subscription/service/contract/SubscriptionContractServiceImpl";
 
 export interface TelegramController {
 
@@ -47,7 +48,15 @@ export class TelegramControllerImpl implements TelegramController {
 
             console.log(`Check if invite code for address ${address}  already created`);
 
+            const payedSubscriptions = await subscriptionContractService.findPayedSubscriptions(subscriptionId, address);
+
+            if (payedSubscriptions.length === 0) {
+                console.log(`Can't find subscription payment for address ${address}, subscriptionId ${subscriptionId}`);
+                res.json(apiError('payment_not_found', 'Can\'t find subscription payment')).status(404);
+            }
+
             const invocationResult = await telegramService.generateInviteCode(address, subscriptionId);
+            
             handleInvokeCommandOutput(res, invocationResult);
 
         } catch (error) {
