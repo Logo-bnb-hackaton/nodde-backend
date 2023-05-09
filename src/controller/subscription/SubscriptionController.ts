@@ -36,8 +36,7 @@ export interface UpdateSubscriptionDTO {
 }
 
 export interface UpdateSubscriptionStatusDTO {
-    id: string,
-    status: SubscriptionStatus
+    id: string
 }
 
 export interface SubscriptionController {
@@ -46,7 +45,9 @@ export interface SubscriptionController {
 
     update(req: Request, res: Response): Promise<void>
 
-    updateStatus(req: Request, res: Response): Promise<void>
+    beforePay(req: Request, res: Response): Promise<void>
+
+    afterPay(req: Request, res: Response): Promise<void>
 }
 
 export class SubscriptionControllerImpl implements SubscriptionController {
@@ -156,8 +157,7 @@ export class SubscriptionControllerImpl implements SubscriptionController {
         }
     }
 
-    // todo fix it later
-    async updateStatus(req: Request, res: Response): Promise<void> {
+    async beforePay(req: Request, res: Response): Promise<void> {
         try {
             const updateSubscriptionRequest = req.body as UpdateSubscriptionStatusDTO;
             const subscriptionId = updateSubscriptionRequest.id;
@@ -184,7 +184,7 @@ export class SubscriptionControllerImpl implements SubscriptionController {
 
             const subscriptionForUpdate: SubscriptionDO = {
                 ...oldSubscription,
-                status: updateSubscriptionRequest.status,
+                status: 'BEFORE_PAY',
             }
 
             await subscriptionService.put(subscriptionForUpdate);
@@ -196,6 +196,44 @@ export class SubscriptionControllerImpl implements SubscriptionController {
         }
     }
 
+    async afterPay(req: Request, res: Response): Promise<void> {
+        try {
+            const updateSubscriptionRequest = req.body as UpdateSubscriptionStatusDTO;
+            const subscriptionId = updateSubscriptionRequest.id;
+            if (!subscriptionId) {
+                console.log("id is null");
+                res.send({
+                    status: "error",
+                    errorMessage: "subId is null"
+                });
+                return;
+            }
+
+            const oldSubscription = await subscriptionService.getById(subscriptionId);
+            if (!oldSubscription) {
+                res
+                    .json({
+                        error: {
+                            code: 'not_found',
+                            message: 'Subscription not found'
+                        }
+                    })
+                    .status(404)
+            }
+
+            const subscriptionForUpdate: SubscriptionDO = {
+                ...oldSubscription,
+                status: 'UNPUBLISHED',
+            }
+
+            await subscriptionService.put(subscriptionForUpdate);
+
+            res.json(apiResponse({status: 'success'}));
+        } catch (err) {
+            console.error(err);
+            res.json(unknownApiError).status(500);
+        }
+    }
 
 }
 

@@ -23,7 +23,13 @@ export interface SubscriptionDO {
     title: string
 }
 
-export type SubscriptionStatus = 'DRAFT' | 'UNPUBLISHED' | 'PUBLISHED';
+export type SubscriptionStatus =
+    'DRAFT' |
+    'NOT_PAID' |
+    'BEFORE_PAY' |
+    'UNPUBLISHED' |
+    'PUBLISHED'
+    ;
 
 export interface SubscriptionRepository {
 
@@ -63,7 +69,8 @@ export class SubscriptionRepositoryImpl implements SubscriptionRepository {
 
     async put(subscription: SubscriptionDO): Promise<void> {
 
-        console.log(`Start put subscription ${subscription}`);
+        console.log('Start put subscription');
+        console.log(subscription);
 
         const input: PutItemCommandInput = {
             TableName: SubscriptionTableName,

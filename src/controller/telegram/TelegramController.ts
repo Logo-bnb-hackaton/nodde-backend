@@ -8,6 +8,7 @@ import {telegramService} from "@/telegram/TelegramServiceImpl";
 import {GetInviteLinkStatusRequest} from "@/controller/telegram/GetInviteLinkStatusRequest";
 import {GenerateInviteCodeRequest} from "@/controller/telegram/GenerateInviteCodeRequest";
 import * as console from "console";
+import {subscriptionRepository} from "@/subscription/repository/subscription-repository";
 
 export interface TelegramController {
 
@@ -63,8 +64,29 @@ export class TelegramControllerImpl implements TelegramController {
             const {code, subscriptionId} = req.body as BindChatRequest;
             const address = req.session.siwe.address;
             const serviceResponse = await telegramService.bindChat(code, address, subscriptionId);
-            handleInvokeCommandOutput(res, serviceResponse);
 
+            if (serviceResponse.StatusCode !== 200) {
+                let body: any;
+                let code = serviceResponse.StatusCode;
+                if (code?.toString().startsWith("4")) {
+                    body = JSON.parse(getJsonFromLambdaResponse(serviceResponse).body);
+                } else {
+                    body = unknownApiError;
+                    code = 500;
+                }
+                res.json(body).status(code);
+                return;
+            }
+
+            const sub = (await subscriptionRepository.getById(subscriptionId))!!;
+            sub.status = 'NOT_PAID';
+            console.log('Save sub');
+            console.log(sub);
+            await subscriptionRepository.put(sub)
+
+            const body = JSON.parse(getJsonFromLambdaResponse(serviceResponse).body);
+            res.json(body).status(200);
+            return;
         } catch (error) {
             console.error(error)
             res.json(unknownApiError).status(500);
