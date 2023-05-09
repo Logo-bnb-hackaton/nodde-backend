@@ -30,7 +30,7 @@ export class TelegramControllerImpl implements TelegramController {
             const {subscriptionId} = req.body as GetInviteLinkStatusRequest;
             const address = req.session.siwe.address;
             const serviceResponse = await telegramService.getInviteLinkStatus(address, subscriptionId);
-            this.handleInvokeCommandOutput(res, serviceResponse);
+            handleInvokeCommandOutput(res, serviceResponse);
 
         } catch (error) {
             console.error(error)
@@ -47,7 +47,7 @@ export class TelegramControllerImpl implements TelegramController {
             console.log(`Check if invite code for address ${address}  already created`);
 
             const invocationResult = await telegramService.generateInviteCode(address, subscriptionId);
-            this.handleInvokeCommandOutput(res, invocationResult);
+            handleInvokeCommandOutput(res, invocationResult);
 
         } catch (error) {
             console.error(error);
@@ -55,14 +55,15 @@ export class TelegramControllerImpl implements TelegramController {
         }
     }
 
-
     async bindChat(req: Request, res: Response): Promise<void> {
 
         try {
-            const { code, subscriptionId } = req.body as BindChatRequest;
+            console.log('bindChat');
+            console.log(req.body);
+            const {code, subscriptionId} = req.body as BindChatRequest;
             const address = req.session.siwe.address;
             const serviceResponse = await telegramService.bindChat(code, address, subscriptionId);
-            this.handleInvokeCommandOutput(res, serviceResponse);
+            handleInvokeCommandOutput(res, serviceResponse);
 
         } catch (error) {
             console.error(error)
@@ -78,27 +79,30 @@ export class TelegramControllerImpl implements TelegramController {
             const {subscriptionId} = req.body as GetChatBindingStatusRequest;
             const address = req.session.siwe.address;
             const invocationResult = await telegramService.getChatBindingStatus(address, subscriptionId);
-            this.handleInvokeCommandOutput(res, invocationResult);
+            handleInvokeCommandOutput(res, invocationResult);
 
         } catch (error) {
             console.error(error)
             res.json(unknownApiError).status(500);
         }
     }
+}
 
-    handleInvokeCommandOutput(res: Response, output: InvokeCommandOutput): void {
-        let response: any;
-        let statusCode = output.StatusCode;
+const handleInvokeCommandOutput = (res: Response, output: InvokeCommandOutput): void => {
+    let response: any;
+    let statusCode = output.StatusCode;
 
-        if (200 === output.StatusCode || output.StatusCode?.toString().startsWith("4")) {
-            response = getJsonFromLambdaResponse(output);
-        } else {
-            response = unknownApiError;
-            statusCode = 500;
-        }
-
-        res.json(response).status(statusCode);
+    if (200 === output.StatusCode || output.StatusCode?.toString().startsWith("4")) {
+        const body = getJsonFromLambdaResponse(output).body;
+        console.log(`body ${body}`);
+        response = JSON.parse(body);
+        console.log(`response ${response}`);
+    } else {
+        response = unknownApiError;
+        statusCode = 500;
     }
+
+    res.json(response).status(statusCode);
 }
 
 const telegramController: TelegramController = new TelegramControllerImpl()
