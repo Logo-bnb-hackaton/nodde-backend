@@ -20,13 +20,14 @@ export interface SubscriptionDO {
     previewImageId: string,
     price: string,
     status: SubscriptionStatus,
-    title: string
+    title: string;
+
 }
 
 export type SubscriptionStatus =
     'DRAFT' |
     'NOT_PAID' |
-    'BEFORE_PAY' |
+    'PAYMENT_PROCESSING' |
     'UNPUBLISHED' |
     'PUBLISHED'
     ;
