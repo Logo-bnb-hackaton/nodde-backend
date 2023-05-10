@@ -65,6 +65,12 @@ app.post('/profile/', authMiddleware.authorizeWallet, profileController.profile)
 
 app.post('/subscription/update', authMiddleware.authorizeWallet, subscriptionController.update);
 
+app.post('/subscription/process-payment', authMiddleware.authorizeWallet, subscriptionController.processPayment);
+
+app.post('/subscription/publish', authMiddleware.authorizeWallet, subscriptionController.publish);
+
+app.post('/subscription/unpublish', authMiddleware.authorizeWallet, subscriptionController.unpublish);
+
 app.post('/subscription/before-pay', authMiddleware.authorizeWallet, subscriptionController.beforePay);
 
 app.post('/subscription/after-pay', authMiddleware.authorizeWallet, subscriptionController.afterPay);

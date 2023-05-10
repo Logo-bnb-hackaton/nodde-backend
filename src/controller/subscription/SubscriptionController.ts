@@ -3,8 +3,13 @@ import {toErrorResponse, toSuccessResponse} from "@/common";
 import {SubscriptionDO, SubscriptionStatus} from "@/subscription/repository/subscription-repository";
 import {subscriptionService} from "@/subscription/service/subscription-service";
 import {subscriptionResourceRepository} from "@/subscription/resource/subscription-resource-repository";
-import {apiResponse, unknownApiError} from "@/api/ApiResponse";
+import {apiError, apiResponse, unknownApiError} from "@/api/ApiResponse";
 import {ImageDto} from "@/controller/profile/ImageDto";
+import {PublishSubscriptionRequest} from "@/controller/subscription/PublishSubscriptionRequest";
+import {UnpublishSubscriptionRequest} from "@/controller/subscription/UnpublishSubscriptionRequest";
+import {ProcessPaymentRequest} from "@/controller/subscription/ProcessPaymentRequest";
+import {subscriptionContractService} from "@/subscription/service/contract/SubscriptionContractServiceImpl";
+import * as console from "console";
 
 export interface GetSubscriptionDescriptionRequest {
     subscriptionId: string
@@ -48,6 +53,12 @@ export interface SubscriptionController {
     beforePay(req: Request, res: Response): Promise<void>
 
     afterPay(req: Request, res: Response): Promise<void>
+
+    processPayment(req: Request, res: Response): Promise<void>
+
+    publish(req: Request, res: Response): Promise<void>
+
+    unpublish(req: Request, res: Response): Promise<void>
 }
 
 export class SubscriptionControllerImpl implements SubscriptionController {
@@ -229,6 +240,106 @@ export class SubscriptionControllerImpl implements SubscriptionController {
             await subscriptionService.put(subscriptionForUpdate);
 
             res.json(apiResponse({status: 'success'}));
+        } catch (err) {
+            console.error(err);
+            res.json(unknownApiError).status(500);
+        }
+    }
+
+    async processPayment(req: Request, res: Response): Promise<void> {
+        try {
+
+            const request = req.body as ProcessPaymentRequest;
+            const subscriptionId = request.subscriptionId;
+            const subscription = await subscriptionService.getById(subscriptionId);
+
+            if (!subscription) {
+                console.log(`Can't find subscription with id: ${subscriptionId}`);
+                res.send(toErrorResponse(`Can't find subscription with id: ${subscriptionId}`));
+                return
+            }
+
+            if(!subscriptionService.isStatusTransitionAllowed(subscription.status, "PAYMENT_PROCESSING")) {
+                res.json(apiError('bad_request', `Can\'t publish the subscription from this ${subscription.status} status`)).status(400)
+                return;
+            }
+
+            await subscriptionService.changeSubscriptionStatus(subscriptionId, "PAYMENT_PROCESSING");
+            console.log(`Subscription ${subscriptionId} update status to PAYMENT_PROCESSING successfully`);
+
+            // Check status in blockchain
+            // One more try-catch because success of responce at this steop really doesn't matter
+            try {
+                const createdSubscriptionEvent = await subscriptionContractService.findSubscriptionCreations(subscriptionId);
+                if (createdSubscriptionEvent.length > 0) {
+                    await subscriptionService.changeSubscriptionStatus(subscriptionId, "UNPUBLISHED");
+                    console.log(`Subscription ${subscriptionId} update status to UNPUBLISHED successfully`);
+                }
+            } catch (e) {
+                console.warn(e);
+            }
+
+
+            res.json({status: 'success'});
+        } catch (err) {
+            console.error(err);
+            res.json(unknownApiError).status(500);
+        }
+    }
+
+    async publish(req: Request, res: Response): Promise<void> {
+        try {
+
+            const request = req.body as PublishSubscriptionRequest;
+            const subscriptionId = request.subscriptionId;
+            const subscription = await subscriptionService.getById(subscriptionId);
+
+            if (!subscription) {
+                console.log(`Can't find subscription with id: ${subscriptionId}`);
+                res.send(toErrorResponse(`Can't find subscription with id: ${subscriptionId}`));
+                return
+            }
+
+            // add owner check
+//            const address = req.session.siwe.address;
+//            if (subscription.ownerAddress === address) {
+//                return with error
+//            }
+
+            if(!subscriptionService.isStatusTransitionAllowed(subscription.status, "PUBLISHED")) {
+                res.json(apiError('bad_request', `Can\'t publish the subscription from this ${subscription.status} status`)).status(400)
+                return;
+            }
+
+            await subscriptionService.changeSubscriptionStatus(subscriptionId, "PUBLISHED");
+            console.log(`Subscription ${subscriptionId} successfully published`);
+            res.json({status: 'success'});
+        } catch (err) {
+            console.error(err);
+            res.json(unknownApiError).status(500);
+        }
+    }
+
+    async unpublish(req: Request, res: Response): Promise<void> {
+        try {
+            const request = req.body as UnpublishSubscriptionRequest;
+            const subscriptionId = request.subscriptionId;
+            const subscription = await subscriptionService.getById(subscriptionId);
+
+            if (!subscription) {
+                console.log(`Can't find subscription with id: ${subscriptionId}`);
+                res.send(toErrorResponse(`Can't find subscription with id: ${subscriptionId}`));
+                return
+            }
+
+            if(!subscriptionService.isStatusTransitionAllowed(subscription.status, "UNPUBLISHED")) {
+                res.json(apiError('bad_request', `Can\'t publish the subscription from this ${subscription.status} status`)).status(400)
+                return;
+            }
+
+            await subscriptionService.changeSubscriptionStatus(subscriptionId, "UNPUBLISHED");
+            console.log(`Subscription ${subscriptionId} successfully published`);
+            res.json({status: 'success'});
         } catch (err) {
             console.error(err);
             res.json(unknownApiError).status(500);

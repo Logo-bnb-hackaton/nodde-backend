@@ -10,6 +10,7 @@ import {GenerateInviteCodeRequest} from "@/controller/telegram/GenerateInviteCod
 import * as console from "console";
 import {subscriptionRepository} from "@/subscription/repository/subscription-repository";
 import {subscriptionContractService} from "@/subscription/service/contract/SubscriptionContractServiceImpl";
+import {subscriptionService} from "@/subscription/service/subscription-service";
 
 export interface TelegramController {
 
@@ -72,30 +73,24 @@ export class TelegramControllerImpl implements TelegramController {
             console.log(req.body);
             const {code, subscriptionId} = req.body as BindChatRequest;
             const address = req.session.siwe.address;
-            const serviceResponse = await telegramService.bindChat(code, address, subscriptionId);
 
-            if (serviceResponse.StatusCode !== 200) {
-                let body: any;
-                let code = serviceResponse.StatusCode;
-                if (code?.toString().startsWith("4")) {
-                    body = JSON.parse(getJsonFromLambdaResponse(serviceResponse).body);
-                } else {
-                    body = unknownApiError;
-                    code = 500;
-                }
-                res.json(body).status(code);
+            const subscription = await subscriptionRepository.getById(subscriptionId);
+            if (!subscription) {
+                console.log(`Subscription with id ${subscriptionId} not found`);
+                res.json(apiError('not_found', 'Subscription not found'));
                 return;
             }
 
-            const sub = (await subscriptionRepository.getById(subscriptionId))!!;
-            sub.status = 'NOT_PAID';
-            console.log('Save sub');
-            console.log(sub);
-            await subscriptionRepository.put(sub)
+            const serviceResponse = await telegramService.bindChat(code, address, subscriptionId);
 
-            const body = JSON.parse(getJsonFromLambdaResponse(serviceResponse).body);
-            res.json(body).status(200);
-            return;
+            if (serviceResponse.StatusCode !== 200) {
+                handleInvokeCommandOutput(res, serviceResponse);
+                return;
+            }
+
+            await subscriptionService.changeSubscriptionStatus(subscriptionId, 'NOT_PAID');
+
+            handleInvokeCommandOutput(res, serviceResponse);
         } catch (error) {
             console.error(error)
             res.json(unknownApiError).status(500);
