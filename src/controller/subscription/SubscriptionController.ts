@@ -259,8 +259,8 @@ export class SubscriptionControllerImpl implements SubscriptionController {
                 return
             }
 
-            if(!subscriptionService.isStatusTransitionAllowed(subscription.status, "PAYMENT_PROCESSING")) {
-                res.json(apiError('bad_request', `Can\'t publish the subscription from this ${subscription.status} status`)).status(400)
+            if (!subscriptionService.isStatusTransitionAllowed(subscription.status, "PAYMENT_PROCESSING")) {
+                res.json(apiError('bad_request', `Can\'t start process payment because subscription in status ${subscription.status}`)).status(400)
                 return;
             }
 
@@ -306,7 +306,7 @@ export class SubscriptionControllerImpl implements SubscriptionController {
 //                return with error
 //            }
 
-            if(!subscriptionService.isStatusTransitionAllowed(subscription.status, "PUBLISHED")) {
+            if (!subscriptionService.isStatusTransitionAllowed(subscription.status, "PUBLISHED")) {
                 res.json(apiError('bad_request', `Can\'t publish the subscription from this ${subscription.status} status`)).status(400)
                 return;
             }
@@ -322,6 +322,7 @@ export class SubscriptionControllerImpl implements SubscriptionController {
 
     async unpublish(req: Request, res: Response): Promise<void> {
         try {
+
             const request = req.body as UnpublishSubscriptionRequest;
             const subscriptionId = request.subscriptionId;
             const subscription = await subscriptionService.getById(subscriptionId);
@@ -332,7 +333,7 @@ export class SubscriptionControllerImpl implements SubscriptionController {
                 return
             }
 
-            if(!subscriptionService.isStatusTransitionAllowed(subscription.status, "UNPUBLISHED")) {
+            if (!subscriptionService.isStatusTransitionAllowed(subscription.status, "UNPUBLISHED")) {
                 res.json(apiError('bad_request', `Can\'t publish the subscription from this ${subscription.status} status`)).status(400)
                 return;
             }

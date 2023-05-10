@@ -1,4 +1,8 @@
 
 export interface SubscriptionCreationEvent {
-    hexId: string
+    author: string,
+    hexId: string,
+    tokenAddress: string,
+    price: string,
+    discounts: any
 }

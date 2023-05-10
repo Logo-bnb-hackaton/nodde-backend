@@ -1,5 +1,5 @@
 import {ImageDto} from "@/controller/profile/ImageDto";
-import {scanTable} from "../../db/db";
+import {scanTable} from "@/db/db";
 import {SubscriptionDO, SubscriptionStatus, subscriptionRepository} from "../repository/subscription-repository";
 import {subscriptionResourceRepository} from "../resource/subscription-resource-repository";
 import {Image} from "@/s3/image";
