@@ -3,7 +3,6 @@ import {scanTable} from "@/db/db";
 import {SubscriptionDO, SubscriptionStatus, subscriptionRepository} from "../repository/subscription-repository";
 import {subscriptionResourceRepository} from "../resource/subscription-resource-repository";
 import {Image} from "@/s3/image";
-import * as console from "console";
 
 export interface BriefSubscriptionInfo {
     id: string;
@@ -100,7 +99,7 @@ export class SubscriptionServiceImpl implements SubscriptionService {
             status: status
         };
 
-        if (this.isStatusTransitionAllowed(subscription.status, status)) {
+        if (!this.isStatusTransitionAllowed(subscription.status, status)) {
             throw new Error(`Cant change status because illegal transition ${subscription.status} -> ${status}}`);
         }
 
@@ -109,7 +108,7 @@ export class SubscriptionServiceImpl implements SubscriptionService {
 
     isStatusTransitionAllowed(oldStatus: SubscriptionStatus, newStatus: SubscriptionStatus): boolean {
 
-        let result: boolean;
+        let result: boolean = true;
         switch (oldStatus) {
             case "DRAFT":
                 if (newStatus !== "NOT_PAID") {
@@ -122,7 +121,7 @@ export class SubscriptionServiceImpl implements SubscriptionService {
                 }
                 break;
             case "PAYMENT_PROCESSING":
-                if (newStatus !== "NOT_PAID" && newStatus !== "UNPUBLISHED") {
+                if (newStatus !== "NOT_PAID" && newStatus !== "UNPUBLISHED" && newStatus !== "PAYMENT_PROCESSING") {
                     result = false;
                 }
                 break;

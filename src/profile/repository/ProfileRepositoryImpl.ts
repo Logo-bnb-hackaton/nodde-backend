@@ -3,7 +3,6 @@ import { ProfileDO } from "./ProfileDO";
 import { ProfileRepository } from "./ProfileRepository";
 import { marshall, unmarshall } from "@aws-sdk/util-dynamodb";
 import { documentClient } from "@/db/dynamo";
-import * as console from "console";
 import {QueryCommand, QueryCommandInput} from "@aws-sdk/lib-dynamodb";
 
 export class ProfileRepositoryImpl implements ProfileRepository {

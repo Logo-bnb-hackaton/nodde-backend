@@ -1,6 +1,5 @@
 import {Request, Response} from "express";
 import {SiweErrorType, SiweMessage, generateNonce} from "siwe";
-import * as console from "console";
 import {unknownApiError} from "@/api/ApiResponse";
 import {SignInRequest} from "@/controller/auth/SignInRequest";
 
@@ -76,7 +75,7 @@ export class AuthControllerImpl implements AuthController {
             req.session.destroy(() => res.status(205).send());
         } catch (err) {
             console.error(err);
-            res.status(500).json(unknownApiError);
+            res.status(200).json(unknownApiError);
         }
     }
 

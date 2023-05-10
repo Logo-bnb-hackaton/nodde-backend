@@ -8,8 +8,8 @@ import {GetProfileRequest} from "./GetProfileRequest";
 import {toErrorResponse, toSuccessResponse} from "@/common";
 import {subscriptionService} from "@/subscription/service/subscription-service";
 import {GetProfileResponse} from "./GetProfileResponse";
-import * as console from "console";
 import {CreateNewProfileRequest} from "@/controller/profile/CreateNewProfileRequest";
+import * as console from "console";
 
 export class ProfileControllerImpl implements ProfileController {
 
@@ -52,9 +52,11 @@ export class ProfileControllerImpl implements ProfileController {
     async update(req: Request, res: Response): Promise<void> {
 
         try {
+            console.log(`Start updating request`);
 
             const updateProfileRequest = req.body as UpdateProfileRequest;
             const profileId = updateProfileRequest.id;
+            console.log(updateProfileRequest);
 
             if (!profileId) {
                 console.log("profileId is null");
@@ -63,23 +65,27 @@ export class ProfileControllerImpl implements ProfileController {
             }
 
             const currentProfile = await profileService.getById(profileId);
-            if (!currentProfile) {
-                console.log(`Profile with id ${profileId} not found`);
-                res.json(apiError('not_found', 'Profile not found')).status(404);
-                return;
-            }
+            // if (!currentProfile) {
+            //     console.log(`Profile with id ${profileId} not found`);
+            //     res.json(apiError('not_found', 'Profile not found')).status(404);
+            //     return;
+            // }
 
-            if (currentProfile.address !== req.session.siwe.address) {
-                console.log(``);
+            if (currentProfile && currentProfile.address !== req.session.siwe.address) {
                 res.json(apiError('unautorized', 'Unatorized request')).status(401);
                 return;
             }
 
-            const updatedLogo = await profileService.uploadImage(currentProfile?.logoId, updateProfileRequest.logo.base64Image);
+            let updatedLogo
+            if (currentProfile) {
+                updatedLogo = await profileService.uploadImage(currentProfile.logoId, updateProfileRequest.logo.base64Image);
+            } else {
+                updatedLogo = await profileService.saveImage(updateProfileRequest.logo.base64Image);
+            }
 
             const profile: ProfileDO = {
                 id: profileId,
-                address: currentProfile.address,
+                address: req.session.siwe.address,
                 title: updateProfileRequest.title,
                 description: updateProfileRequest.description,
                 logoId: updatedLogo,

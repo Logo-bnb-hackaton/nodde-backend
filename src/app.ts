@@ -1,4 +1,4 @@
-import express, {Express, json, Request, Response} from 'express';
+import express, {Express, json} from 'express';
 import {authMiddleware} from './auth/auth-middleware';
 import {authController} from './controller/auth/AuthController';
 import {subscriptionController} from './controller/subscription/SubscriptionController';
@@ -6,8 +6,8 @@ import dotenv from 'dotenv';
 import {telegramController} from './controller/telegram/TelegramController';
 import {SiweMessage} from 'siwe';
 import {profileController} from './controller/profile/ProfileControllerImpl';
-import {subscriptionContractService} from "@/subscription/service/contract/SubscriptionContractServiceImpl";
-import * as console from "console";
+import session from "express-session";
+import {SessionStore} from "@/store/SessionStore";
 
 const cors = require('cors');
 
@@ -31,7 +31,7 @@ app.use(cors({
 
 }));
 
-app.use(Session({
+app.use(session({
     name: "siwe",
     secret: "siwe-secret", // change to env
     resave: false,
@@ -61,7 +61,7 @@ app.post('/profile/create', authMiddleware.authorizeWallet, profileController.cr
 
 app.post('/profile/update', authMiddleware.authorizeWallet, profileController.update);
 
-app.post('/profile/', authMiddleware.authorizeWallet, profileController.profile);
+app.post('/profile/', profileController.profile);
 
 app.post('/subscription/update', authMiddleware.authorizeWallet, subscriptionController.update);
 
@@ -71,11 +71,7 @@ app.post('/subscription/publish', authMiddleware.authorizeWallet, subscriptionCo
 
 app.post('/subscription/unpublish', authMiddleware.authorizeWallet, subscriptionController.unpublish);
 
-app.post('/subscription/before-pay', authMiddleware.authorizeWallet, subscriptionController.beforePay);
-
-app.post('/subscription/after-pay', authMiddleware.authorizeWallet, subscriptionController.afterPay);
-
-app.post('/subscription/', authMiddleware.authorizeWallet, subscriptionController.getSubscriptionDescription);
+app.post('/subscription/', subscriptionController.getSubscriptionDescription);
 
 app.get('/telegram/get-invite-link-status', authMiddleware.authorizeWallet, telegramController.getInviteLinkStatus);
 

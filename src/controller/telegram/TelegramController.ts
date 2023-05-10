@@ -7,7 +7,6 @@ import {InvokeCommandOutput} from "@aws-sdk/client-lambda";
 import {telegramService} from "@/telegram/TelegramServiceImpl";
 import {GetInviteLinkStatusRequest} from "@/controller/telegram/GetInviteLinkStatusRequest";
 import {GenerateInviteCodeRequest} from "@/controller/telegram/GenerateInviteCodeRequest";
-import * as console from "console";
 import {subscriptionRepository} from "@/subscription/repository/subscription-repository";
 import {subscriptionContractService} from "@/subscription/service/contract/SubscriptionContractServiceImpl";
 import {subscriptionService} from "@/subscription/service/subscription-service";

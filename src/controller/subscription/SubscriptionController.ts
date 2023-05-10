@@ -9,7 +9,6 @@ import {PublishSubscriptionRequest} from "@/controller/subscription/PublishSubsc
 import {UnpublishSubscriptionRequest} from "@/controller/subscription/UnpublishSubscriptionRequest";
 import {ProcessPaymentRequest} from "@/controller/subscription/ProcessPaymentRequest";
 import {subscriptionContractService} from "@/subscription/service/contract/SubscriptionContractServiceImpl";
-import * as console from "console";
 
 export interface GetSubscriptionDescriptionRequest {
     subscriptionId: string
@@ -44,15 +43,12 @@ export interface UpdateSubscriptionStatusDTO {
     id: string
 }
 
+
 export interface SubscriptionController {
 
     getSubscriptionDescription(req: Request, res: Response): Promise<void>
 
     update(req: Request, res: Response): Promise<void>
-
-    beforePay(req: Request, res: Response): Promise<void>
-
-    afterPay(req: Request, res: Response): Promise<void>
 
     processPayment(req: Request, res: Response): Promise<void>
 
@@ -131,19 +127,16 @@ export class SubscriptionControllerImpl implements SubscriptionController {
             }
 
             const oldSubscription = await subscriptionService.getById(subscriptionId);
-            if (!oldSubscription) {
-                res
-                    .json({
-                        error: {
-                            code: 'not_found',
-                            message: 'Subscription not found'
-                        }
-                    })
-                    .status(404)
-            }
 
-            const mainImageS3Id = await subscriptionService.uploadImage(oldSubscription.mainImageId, updateSubscriptionRequest.mainImage.base64Image);
-            const previewImgS3Id = await subscriptionService.uploadImage(oldSubscription.previewImageId, updateSubscriptionRequest.previewImage.base64Image);
+            let mainImageS3Id;
+            let previewImgS3Id;
+            if (oldSubscription) {
+                mainImageS3Id = await subscriptionService.uploadImage(oldSubscription.mainImageId, updateSubscriptionRequest.mainImage.base64Image);
+                previewImgS3Id = await subscriptionService.uploadImage(oldSubscription.previewImageId, updateSubscriptionRequest.previewImage.base64Image);
+            } else {
+                mainImageS3Id = await subscriptionService.saveImage(updateSubscriptionRequest.mainImage.base64Image);
+                previewImgS3Id = await subscriptionService.saveImage(updateSubscriptionRequest.previewImage.base64Image);
+            }
 
             const subscriptionForUpdate: SubscriptionDO = {
                 id: subscriptionId,
@@ -168,84 +161,6 @@ export class SubscriptionControllerImpl implements SubscriptionController {
         }
     }
 
-    async beforePay(req: Request, res: Response): Promise<void> {
-        try {
-            const updateSubscriptionRequest = req.body as UpdateSubscriptionStatusDTO;
-            const subscriptionId = updateSubscriptionRequest.id;
-            if (!subscriptionId) {
-                console.log("id is null");
-                res.send({
-                    status: "error",
-                    errorMessage: "subId is null"
-                });
-                return;
-            }
-
-            const oldSubscription = await subscriptionService.getById(subscriptionId);
-            if (!oldSubscription) {
-                res
-                    .json({
-                        error: {
-                            code: 'not_found',
-                            message: 'Subscription not found'
-                        }
-                    })
-                    .status(404)
-            }
-
-            const subscriptionForUpdate: SubscriptionDO = {
-                ...oldSubscription,
-                status: 'BEFORE_PAY',
-            }
-
-            await subscriptionService.put(subscriptionForUpdate);
-
-            res.json(apiResponse({status: 'success'}));
-        } catch (err) {
-            console.error(err);
-            res.json(unknownApiError).status(500);
-        }
-    }
-
-    async afterPay(req: Request, res: Response): Promise<void> {
-        try {
-            const updateSubscriptionRequest = req.body as UpdateSubscriptionStatusDTO;
-            const subscriptionId = updateSubscriptionRequest.id;
-            if (!subscriptionId) {
-                console.log("id is null");
-                res.send({
-                    status: "error",
-                    errorMessage: "subId is null"
-                });
-                return;
-            }
-
-            const oldSubscription = await subscriptionService.getById(subscriptionId);
-            if (!oldSubscription) {
-                res
-                    .json({
-                        error: {
-                            code: 'not_found',
-                            message: 'Subscription not found'
-                        }
-                    })
-                    .status(404)
-            }
-
-            const subscriptionForUpdate: SubscriptionDO = {
-                ...oldSubscription,
-                status: 'UNPUBLISHED',
-            }
-
-            await subscriptionService.put(subscriptionForUpdate);
-
-            res.json(apiResponse({status: 'success'}));
-        } catch (err) {
-            console.error(err);
-            res.json(unknownApiError).status(500);
-        }
-    }
-
     async processPayment(req: Request, res: Response): Promise<void> {
         try {
 
@@ -258,6 +173,11 @@ export class SubscriptionControllerImpl implements SubscriptionController {
                 res.send(toErrorResponse(`Can't find subscription with id: ${subscriptionId}`));
                 return
             }
+            let status = subscription.status;
+            if (status === 'UNPUBLISHED') {
+                res.json({status: status});
+                return;
+            }
 
             if (!subscriptionService.isStatusTransitionAllowed(subscription.status, "PAYMENT_PROCESSING")) {
                 res.json(apiError('bad_request', `Can\'t start process payment because subscription in status ${subscription.status}`)).status(400)
@@ -266,6 +186,7 @@ export class SubscriptionControllerImpl implements SubscriptionController {
 
             await subscriptionService.changeSubscriptionStatus(subscriptionId, "PAYMENT_PROCESSING");
             console.log(`Subscription ${subscriptionId} update status to PAYMENT_PROCESSING successfully`);
+            status = "PAYMENT_PROCESSING";
 
             // Check status in blockchain
             // One more try-catch because success of responce at this steop really doesn't matter
@@ -274,13 +195,14 @@ export class SubscriptionControllerImpl implements SubscriptionController {
                 if (createdSubscriptionEvent.length > 0) {
                     await subscriptionService.changeSubscriptionStatus(subscriptionId, "UNPUBLISHED");
                     console.log(`Subscription ${subscriptionId} update status to UNPUBLISHED successfully`);
+                    status = "UNPUBLISHED";
                 }
             } catch (e) {
                 console.warn(e);
             }
 
 
-            res.json({status: 'success'});
+            res.json({status: status});
         } catch (err) {
             console.error(err);
             res.json(unknownApiError).status(500);
