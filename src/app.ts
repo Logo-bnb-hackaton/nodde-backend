@@ -71,6 +71,8 @@ app.post('/subscription/publish', authMiddleware.authorizeWallet, subscriptionCo
 
 app.post('/subscription/unpublish', authMiddleware.authorizeWallet, subscriptionController.unpublish);
 
+app.post('/subscription/get-subscription-payment-status', authMiddleware.authorizeWallet, subscriptionController.getSubscriptionPaymentStatus);
+
 app.post('/subscription/', subscriptionController.getSubscriptionDescription);
 
 app.get('/telegram/get-invite-link-status', authMiddleware.authorizeWallet, telegramController.getInviteLinkStatus);
