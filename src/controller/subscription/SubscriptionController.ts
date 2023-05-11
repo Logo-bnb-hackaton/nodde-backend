@@ -9,6 +9,11 @@ import {PublishSubscriptionRequest} from "@/controller/subscription/PublishSubsc
 import {UnpublishSubscriptionRequest} from "@/controller/subscription/UnpublishSubscriptionRequest";
 import {ProcessPaymentRequest} from "@/controller/subscription/ProcessPaymentRequest";
 import {subscriptionContractService} from "@/subscription/service/contract/SubscriptionContractServiceImpl";
+import * as console from "console";
+import {
+    GetSubscriptionPaymentStatusRequest,
+    GetSubscriptionPaymentStatusResponse
+} from "@/controller/subscription/GetSubscriptionPaymentStatusRequest";
 
 export interface GetSubscriptionDescriptionRequest {
     subscriptionId: string
@@ -46,6 +51,8 @@ export interface UpdateSubscriptionStatusDTO {
 
 export interface SubscriptionController {
 
+    getSubscriptionPaymentStatus(req: Request, res: Response): Promise<void>
+
     getSubscriptionDescription(req: Request, res: Response): Promise<void>
 
     update(req: Request, res: Response): Promise<void>
@@ -58,6 +65,29 @@ export interface SubscriptionController {
 }
 
 export class SubscriptionControllerImpl implements SubscriptionController {
+
+    async getSubscriptionPaymentStatus(req: Request, res: Response): Promise<void> {
+        try {
+
+            const request = req.body as GetSubscriptionPaymentStatusRequest;
+            const subscriptionId = request.subscriptionId;
+            const address = req.session.siwe.address;
+
+            const result = await subscriptionContractService.findPayedSubscriptions(subscriptionId, address);
+
+            let response: GetSubscriptionPaymentStatusResponse;
+            if (result.length > 0) {
+                response = { status: "PAID" }
+            } else {
+                response = { status: "NOT_PAID" }
+            }
+
+            res.json(response);
+        } catch (err) {
+            console.log(err);
+            res.json(unknownApiError).status(500);
+        }
+    }
 
     async getSubscriptionDescription(req: Request, res: Response): Promise<void> {
         try {
