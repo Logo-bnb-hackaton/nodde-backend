@@ -189,7 +189,6 @@ export class SubscriptionControllerImpl implements SubscriptionController {
             status = "PAYMENT_PROCESSING";
 
             // Check status in blockchain
-            // One more try-catch because success of responce at this steop really doesn't matter
             try {
                 const createdSubscriptionEvent = await subscriptionContractService.findSubscriptionCreations(subscriptionId);
                 if (createdSubscriptionEvent.length > 0) {
