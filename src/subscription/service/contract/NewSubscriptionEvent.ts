@@ -6,5 +6,5 @@ export interface NewSubscriptionEvent {
     subscriptionId: number,
     subscriptionEndTime: number,
     tokenAddress: string,
-    amount: number,
+    amount: string,
 }

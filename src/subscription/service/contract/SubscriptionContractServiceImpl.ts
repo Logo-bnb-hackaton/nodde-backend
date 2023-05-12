@@ -43,7 +43,7 @@ export class SubscriptionContractServiceImpl implements SubscriptionContractServ
                 subscriptionId: subscriptionIndex.toNumber(),
                 subscriptionEndTime: subscriptionEndTime.toString(),
                 tokenAddress: tokenAddress,
-                amount: amount.toNumber(),
+                amount: amount.toString(),
             }
         })
             .filter(log => log.hexId === subscriptionHexId)
