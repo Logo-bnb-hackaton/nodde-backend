@@ -26,7 +26,7 @@ const app: Express = express();
 // todo fix it later
 app.use(json({limit: "5mb"}));
 app.use(cors({
-    origin: ['http://localhost:3000'],
+    origin: ['http://localhost:3000', 'https://community-front-henna.vercel.app'],
     credentials: true,
 
 }));
@@ -75,7 +75,7 @@ app.post('/subscription/get-subscription-payment-status', authMiddleware.authori
 
 app.post('/subscription/', subscriptionController.getSubscriptionDescription);
 
-app.get('/telegram/get-invite-link-status', authMiddleware.authorizeWallet, telegramController.getInviteLinkStatus);
+app.post('/telegram/get-invite-link-status', authMiddleware.authorizeWallet, telegramController.getInviteLinkStatus);
 
 app.post('/telegram/generate-invite-code', authMiddleware.authorizeWallet, telegramController.generateInviteCode);
 
