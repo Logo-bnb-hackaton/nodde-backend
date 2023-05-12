@@ -125,7 +125,6 @@ export class ProfileControllerImpl implements ProfileController {
                 return
             }
 
-            const logo = await profileService.getImage(profile.logoId);
             const subscriptions = await subscriptionService.loadBriefSubscription(profileId);
 
             const response: GetProfileResponse = {
@@ -135,7 +134,6 @@ export class ProfileControllerImpl implements ProfileController {
                 socialMediaLinks: profile.socialMediaLinks,
                 logo: {
                     id: profile.logoId,
-                    base64Image: logo.base64Data
                 },
                 subscriptions: subscriptions
             }

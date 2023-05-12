@@ -60,18 +60,12 @@ export class SubscriptionServiceImpl implements SubscriptionService {
 
         console.log('Loading images for subscriptions')
 
-
-        const images = await Promise.all(subscriptions.map(s => {
-            return subscriptionResourceRepository.getImage(s.previewImageId)
-        }));
-
         return subscriptions.map(s => {
             return {
                 ...s,
                 previewImageId: undefined,
                 previewImage: {
                     id: s.previewImageId,
-                    base64Image: images.find(i => i.id === s.previewImageId).base64Data
                 }
             }
         })

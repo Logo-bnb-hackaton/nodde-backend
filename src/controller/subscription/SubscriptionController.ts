@@ -2,7 +2,6 @@ import {Request, Response} from "express"
 import {toErrorResponse, toSuccessResponse} from "@/common";
 import {SubscriptionDO, SubscriptionStatus} from "@/subscription/repository/subscription-repository";
 import {subscriptionService} from "@/subscription/service/subscription-service";
-import {subscriptionResourceRepository} from "@/subscription/resource/subscription-resource-repository";
 import {apiError, apiResponse, unknownApiError} from "@/api/ApiResponse";
 import {ImageDto} from "@/controller/profile/ImageDto";
 import {PublishSubscriptionRequest} from "@/controller/subscription/PublishSubscriptionRequest";
@@ -109,9 +108,6 @@ export class SubscriptionControllerImpl implements SubscriptionController {
                 return
             }
 
-            const mainImageBase64 = (await subscriptionResourceRepository.getImage(subscription.mainImageId)).base64Data;
-            const previewImageBase64 = (await subscriptionResourceRepository.getImage(subscription.previewImageId)).base64Data;
-
             const response: GetSubscriptionDescriptionResponse = {
                 id: subscription.id,
                 coin: subscription.coin,
@@ -123,11 +119,9 @@ export class SubscriptionControllerImpl implements SubscriptionController {
                 title: subscription.title,
                 mainImage: {
                     id: subscription.mainImageId,
-                    base64Image: mainImageBase64
                 },
                 previewImage: {
                     id: subscription.previewImageId,
-                    base64Image: previewImageBase64
                 }
             }
 
