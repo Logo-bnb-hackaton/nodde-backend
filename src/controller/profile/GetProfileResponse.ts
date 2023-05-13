@@ -1,11 +1,6 @@
-import { BriefSubscriptionInfo } from "@/subscription/service/subscription-service";
-import { ImageDto } from "./ImageDto";
+import {BriefSubscriptionInfo} from "@/subscription/service/subscription-service";
+import {BaseProfileDTO} from "@/controller/profile/UpdateProfileResponse";
 
-export interface GetProfileResponse {
-    id: string;
-    title: string;
-    description: string;
-    logo: ImageDto,
-    socialMediaLinks: string[];
+export interface GetProfileResponse extends BaseProfileDTO {
     subscriptions: BriefSubscriptionInfo[],
 }

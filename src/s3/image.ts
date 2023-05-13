@@ -1,6 +1,14 @@
-import { GetObjectCommand, GetObjectCommandInput, PutObjectCommand, PutObjectCommandInput } from "@aws-sdk/client-s3";
-import { s3 } from "./s3";
-import { randomUUID } from "crypto";
+import {
+    DeleteObjectCommand,
+    DeleteObjectCommandInput,
+    GetObjectCommand,
+    GetObjectCommandInput,
+    PutObjectCommand,
+    PutObjectCommandInput
+} from "@aws-sdk/client-s3";
+import {s3} from "./s3";
+import {randomUUID} from "crypto";
+import * as console from "console";
 
 export interface Image {
     id: string,
@@ -54,9 +62,22 @@ export const save = async (bucket: string, base64Image: string): Promise<string>
     return input.Key;
 }
 
+export const remove = async (bucket: string, id: string): Promise<void> => {
+
+    console.log(`Start removing image with id ${id}`);
+
+    const input: DeleteObjectCommandInput = {
+        Bucket: bucket,
+        Key: id,
+    };
+
+    await s3.send(new DeleteObjectCommand(input));
+    console.log(`Image with id ${id} was removed`);
+}
+
 export const update = async (bucket: string, id: string, newBase64Image: string): Promise<void> => {
     console.log(`Start updating image with id ${id}`);
-        
+
     const currentImage = await getImage(bucket, id);
     if (!currentImage) {
         console.log(`No image found for id ${id}`);

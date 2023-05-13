@@ -13,6 +13,8 @@ export interface ProfileService {
 
     saveImage(base64Image: string): Promise<string>
 
+    removeImage(id: string): Promise<void>
+
     uploadImage(id: string, base64Image: string): Promise<string>
 
 }

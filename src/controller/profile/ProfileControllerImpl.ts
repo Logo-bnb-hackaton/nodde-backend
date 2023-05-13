@@ -10,6 +10,7 @@ import {subscriptionService} from "@/subscription/service/subscription-service";
 import {GetProfileResponse} from "./GetProfileResponse";
 import {CreateNewProfileRequest} from "@/controller/profile/CreateNewProfileRequest";
 import * as console from "console";
+import {BaseProfileDTO} from "@/controller/profile/UpdateProfileResponse";
 
 export class ProfileControllerImpl implements ProfileController {
 
@@ -76,26 +77,32 @@ export class ProfileControllerImpl implements ProfileController {
                 return;
             }
 
-            let updatedLogo
-            if (currentProfile) {
-                updatedLogo = await profileService.uploadImage(currentProfile.logoId, updateProfileRequest.logo.base64Image);
-            } else {
-                updatedLogo = await profileService.saveImage(updateProfileRequest.logo.base64Image);
-            }
-
             const profile: ProfileDO = {
                 id: profileId,
                 address: req.session.siwe.address,
                 title: updateProfileRequest.title,
                 description: updateProfileRequest.description,
-                logoId: updatedLogo,
+                logoId: updateProfileRequest.logoId,
                 socialMediaLinks: updateProfileRequest.socialMediaLinks,
                 instant: new Date().getTime().toString(),
             }
 
-            await profileService.save(profile);
+            const updatedProfile = await profileService.save(profile);
 
-            res.send({status: 'success'});
+            if (currentProfile.logoId !== updateProfileRequest.logoId) {
+                await profileService.removeImage(currentProfile.id);
+            }
+
+            res.send({
+                status: 'success',
+                data: {
+                    id: updatedProfile.id,
+                    title: updatedProfile.title,
+                    description: updatedProfile.description,
+                    logoId: updatedProfile.logoId,
+                    socialMediaLinks: updatedProfile.socialMediaLinks,
+                } as BaseProfileDTO
+            });
 
         } catch (err) {
             console.error(err);
@@ -132,9 +139,7 @@ export class ProfileControllerImpl implements ProfileController {
                 title: profile.title,
                 description: profile.description,
                 socialMediaLinks: profile.socialMediaLinks,
-                logo: {
-                    id: profile.logoId,
-                },
+                logoId: profile.logoId,
                 subscriptions: subscriptions
             }
 

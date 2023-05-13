@@ -27,6 +27,11 @@ export class ProfileServiceImpl implements ProfileService {
        return profileResourceRepository.save(base64Image);
     }
 
+    removeImage(id: string): Promise<void> {
+        return profileResourceRepository.remove(id);
+    }
+
+
     async uploadImage(id: string, base64Image: string): Promise<string> {
         await profileResourceRepository.update(id, base64Image);
         return id;
