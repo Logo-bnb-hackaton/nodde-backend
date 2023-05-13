@@ -1,4 +1,3 @@
-import {ImageDto} from "@/controller/profile/ImageDto";
 import {scanTable} from "@/db/db";
 import {SubscriptionDO, SubscriptionStatus, subscriptionRepository} from "../repository/subscription-repository";
 import {subscriptionResourceRepository} from "../resource/subscription-resource-repository";
@@ -9,7 +8,7 @@ export interface BriefSubscriptionInfo {
     status: SubscriptionStatus,
     ownerId: string;
     title: string;
-    previewImage: ImageDto,
+    previewImageId: string,
 }
 
 export interface SubscriptionService {
@@ -17,11 +16,13 @@ export interface SubscriptionService {
 
     put(subscription: SubscriptionDO): Promise<void>
 
-    loadBriefSubscription(profileId: string): Promise<any[]>
+    loadBriefSubscription(profileId: string): Promise<BriefSubscriptionInfo[]>
 
     getImage(id: string): Promise<Image | undefined>
 
     saveImage(base64Image: string): Promise<string>
+
+    removeImage(id: string): Promise<void>
 
     uploadImage(id: string, base64Image: string): Promise<string>
 
@@ -43,7 +44,7 @@ export class SubscriptionServiceImpl implements SubscriptionService {
 
     async loadBriefSubscription(profileId: string): Promise<any[]> {
         console.log(`Loading brief subscription info for profile ${profileId}`)
-        const subscriptions = (await scanTable("Community-subscription"))
+        const subscriptions: BriefSubscriptionInfo[] = (await scanTable("Community-subscription"))
             .filter(s => s.ownerId === profileId)
             .map(s => ({
                 id: s.id,
@@ -51,7 +52,7 @@ export class SubscriptionServiceImpl implements SubscriptionService {
                 ownerId: s.ownerId,
                 title: s.title,
                 previewImageId: s.previewImageId,
-            }))
+            }));
 
         if (subscriptions.length === 0) {
             console.log('subscriptions not found')
@@ -60,15 +61,7 @@ export class SubscriptionServiceImpl implements SubscriptionService {
 
         console.log('Loading images for subscriptions')
 
-        return subscriptions.map(s => {
-            return {
-                ...s,
-                previewImageId: undefined,
-                previewImage: {
-                    id: s.previewImageId,
-                }
-            }
-        })
+        return subscriptions;
     }
 
     async getImage(id: string): Promise<Image> {
@@ -77,6 +70,10 @@ export class SubscriptionServiceImpl implements SubscriptionService {
 
     async saveImage(base64Image: string): Promise<string> {
         return subscriptionResourceRepository.save(base64Image);
+    }
+
+    async removeImage(id: string): Promise<void> {
+        return subscriptionResourceRepository.remove(id);
     }
 
     async uploadImage(id: string, base64Image: string): Promise<string> {

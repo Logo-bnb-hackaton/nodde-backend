@@ -2,8 +2,7 @@ import {Request, Response} from "express"
 import {toErrorResponse, toSuccessResponse} from "@/common";
 import {SubscriptionDO, SubscriptionStatus} from "@/subscription/repository/subscription-repository";
 import {subscriptionService} from "@/subscription/service/subscription-service";
-import {apiError, apiResponse, unknownApiError} from "@/api/ApiResponse";
-import {ImageDto} from "@/controller/profile/ImageDto";
+import {apiError, unknownApiError} from "@/api/ApiResponse";
 import {PublishSubscriptionRequest} from "@/controller/subscription/PublishSubscriptionRequest";
 import {UnpublishSubscriptionRequest} from "@/controller/subscription/UnpublishSubscriptionRequest";
 import {ProcessPaymentRequest} from "@/controller/subscription/ProcessPaymentRequest";
@@ -27,8 +26,8 @@ export interface GetSubscriptionDescriptionResponse {
     price: string,
     status: SubscriptionStatus,
     title: string
-    mainImage: ImageDto,
-    previewImage: ImageDto
+    mainImageId: string,
+    previewImageId: string,
 }
 
 export interface UpdateSubscriptionDTO {
@@ -37,8 +36,8 @@ export interface UpdateSubscriptionDTO {
     status: SubscriptionStatus;
     title: string;
     description: string;
-    mainImage: ImageDto,
-    previewImage: ImageDto,
+    mainImageId: string,
+    previewImageId: string,
     price: string;
     coin: string;
 }
@@ -76,9 +75,9 @@ export class SubscriptionControllerImpl implements SubscriptionController {
 
             let response: GetSubscriptionPaymentStatusResponse;
             if (result.length > 0) {
-                response = { status: "PAID" }
+                response = {status: "PAID"}
             } else {
-                response = { status: "NOT_PAID" }
+                response = {status: "NOT_PAID"}
             }
 
             res.json(response);
@@ -117,12 +116,8 @@ export class SubscriptionControllerImpl implements SubscriptionController {
                 price: subscription.price,
                 status: subscription.status,
                 title: subscription.title,
-                mainImage: {
-                    id: subscription.mainImageId,
-                },
-                previewImage: {
-                    id: subscription.previewImageId,
-                }
+                mainImageId: subscription.mainImageId,
+                previewImageId: subscription.previewImageId,
             }
 
             res.send(toSuccessResponse(response));
@@ -152,16 +147,6 @@ export class SubscriptionControllerImpl implements SubscriptionController {
 
             const oldSubscription = await subscriptionService.getById(subscriptionId);
 
-            let mainImageS3Id;
-            let previewImgS3Id;
-            if (oldSubscription) {
-                mainImageS3Id = await subscriptionService.uploadImage(oldSubscription.mainImageId, updateSubscriptionRequest.mainImage.base64Image);
-                previewImgS3Id = await subscriptionService.uploadImage(oldSubscription.previewImageId, updateSubscriptionRequest.previewImage.base64Image);
-            } else {
-                mainImageS3Id = await subscriptionService.saveImage(updateSubscriptionRequest.mainImage.base64Image);
-                previewImgS3Id = await subscriptionService.saveImage(updateSubscriptionRequest.previewImage.base64Image);
-            }
-
             const subscriptionForUpdate: SubscriptionDO = {
                 id: subscriptionId,
                 subscriptionId: '123', // todo fix it later
@@ -169,16 +154,23 @@ export class SubscriptionControllerImpl implements SubscriptionController {
                 status: updateSubscriptionRequest.status,
                 title: updateSubscriptionRequest.title,
                 description: updateSubscriptionRequest.description,
-                mainImageId: mainImageS3Id,
-                previewImageId: previewImgS3Id,
+                mainImageId: updateSubscriptionRequest.mainImageId,
+                previewImageId: updateSubscriptionRequest.previewImageId,
                 price: updateSubscriptionRequest.price,
                 coin: updateSubscriptionRequest.coin,
                 instant: new Date().getTime().toString(),
             }
+            await subscriptionService.put(subscriptionForUpdate);
 
-            await subscriptionService.put(subscriptionForUpdate)
+            if (oldSubscription.mainImageId !== subscriptionForUpdate.mainImageId) {
+                await subscriptionService.removeImage(oldSubscription.mainImageId);
+            }
 
-            res.json(apiResponse({status: 'success'}));
+            if (oldSubscription.previewImageId !== subscriptionForUpdate.previewImageId) {
+                await subscriptionService.removeImage(oldSubscription.previewImageId);
+            }
+
+            res.send(toSuccessResponse(subscriptionForUpdate))
         } catch (err) {
             console.error(err);
             res.json(unknownApiError).status(500);
