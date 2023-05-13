@@ -162,11 +162,11 @@ export class SubscriptionControllerImpl implements SubscriptionController {
             }
             await subscriptionService.put(subscriptionForUpdate);
 
-            if (oldSubscription.mainImageId !== subscriptionForUpdate.mainImageId) {
+            if (oldSubscription && oldSubscription.mainImageId !== subscriptionForUpdate.mainImageId) {
                 await subscriptionService.removeImage(oldSubscription.mainImageId);
             }
 
-            if (oldSubscription.previewImageId !== subscriptionForUpdate.previewImageId) {
+            if (oldSubscription && oldSubscription.previewImageId !== subscriptionForUpdate.previewImageId) {
                 await subscriptionService.removeImage(oldSubscription.previewImageId);
             }
 

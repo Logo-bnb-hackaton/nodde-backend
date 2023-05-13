@@ -50,7 +50,8 @@ export class ProfileRepositoryImpl implements ProfileRepository {
         }
 
         const profile = unmarshall(result.Item) as ProfileDO;
-        console.log(`Got profile ${profile}`);
+        console.log(`Got profile`);
+        console.log(profile);
         return profile;
     }
 
