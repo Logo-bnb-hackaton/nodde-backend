@@ -48,9 +48,9 @@ export class TelegramControllerImpl implements TelegramController {
 
             console.log(`Check if invite code for address ${address}  already created`);
 
-            const payedSubscriptions = await subscriptionContractService.findPayedSubscriptions(subscriptionId, address);
+            const paidSubscriptions = await subscriptionContractService.findPaidSubscriptions(subscriptionId, address);
 
-            if (payedSubscriptions.length === 0) {
+            if (paidSubscriptions.length === 0) {
                 console.log(`Can't find subscription payment for address ${address}, subscriptionId ${subscriptionId}`);
                 res.json(apiError('payment_not_found', 'Can\'t find subscription payment')).status(404);
             }

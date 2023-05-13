@@ -17,9 +17,10 @@ const abiSubcriptionCreation = ['event NewOneTimeSubscriptionCreated(uint256 ind
 
 const provider = new providers.JsonRpcProvider({url: networkRpc});
 
+// TODO add indexer instead full log scan
 export class SubscriptionContractServiceImpl implements SubscriptionContractService {
 
-    async findPayedSubscriptions(subscriptionHexId: string, address: string): Promise<Array<NewSubscriptionEvent>> {
+    async findPaidSubscriptions(subscriptionHexId: string, address: string): Promise<Array<NewSubscriptionEvent>> {
 
         console.log('Query for logs ' + subscriptionHexId);
 
