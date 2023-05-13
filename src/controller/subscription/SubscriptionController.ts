@@ -67,6 +67,9 @@ export class SubscriptionControllerImpl implements SubscriptionController {
     async getSubscriptionPaymentStatus(req: Request, res: Response): Promise<void> {
         try {
 
+            console.log(`Start getSubscriptionPaymentStatus`);
+            console.log(req.body);
+
             const request = req.body as GetSubscriptionPaymentStatusRequest;
             const subscriptionId = request.subscriptionId;
             const address = req.session.siwe.address;
@@ -82,7 +85,7 @@ export class SubscriptionControllerImpl implements SubscriptionController {
 
             res.json(response);
         } catch (err) {
-            console.log(err);
+            console.log(err?.toString());
             res.json(unknownApiError).status(500);
         }
     }

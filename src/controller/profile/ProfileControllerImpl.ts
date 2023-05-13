@@ -89,7 +89,7 @@ export class ProfileControllerImpl implements ProfileController {
 
             const updatedProfile = await profileService.save(profile);
 
-            if (currentProfile.logoId !== updateProfileRequest.logoId) {
+            if (currentProfile && currentProfile.logoId !== updateProfileRequest.logoId) {
                 await profileService.removeImage(currentProfile.logoId);
             }
 
