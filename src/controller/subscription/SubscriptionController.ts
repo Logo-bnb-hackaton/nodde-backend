@@ -71,7 +71,7 @@ export class SubscriptionControllerImpl implements SubscriptionController {
             const subscriptionId = request.subscriptionId;
             const address = req.session.siwe.address;
 
-            const result = await subscriptionContractService.findPaiidSubscriptions(subscriptionId, address);
+            const result = await subscriptionContractService.findPaidSubscriptions(subscriptionId, address);
 
             let response: GetSubscriptionPaymentStatusResponse;
             if (result.length > 0) {
