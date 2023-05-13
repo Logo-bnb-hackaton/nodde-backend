@@ -132,7 +132,8 @@ export class SubscriptionControllerImpl implements SubscriptionController {
     async update(req: Request, res: Response): Promise<void> {
 
         try {
-
+            console.log('Start updating subscription');
+            console.log(req.body);
             const updateSubscriptionRequest = req.body as UpdateSubscriptionDTO;
 
             const subscriptionId = updateSubscriptionRequest.id;
